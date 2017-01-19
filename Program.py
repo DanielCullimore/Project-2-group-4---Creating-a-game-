@@ -2,6 +2,7 @@ import pygame, sys
 from pygame import gfxdraw
 
 class Game:
+
     def __init__(self):
         pygame.init()
         pygame.font.init()
@@ -21,10 +22,12 @@ class Game:
                     self.gameExit = True
             mainmenu = MainMenu(self.screen)
             mainmenu.draw()
+            pygame.display.flip()
+
             if mainmenu.exit.isClicked():
                 self.gameExit = True
+                pygame.time.delay(200)
 
-            pygame.display.flip()
             self.clock.tick(self.fps)
 
         pygame.quit()
@@ -49,10 +52,10 @@ class MainMenu:
     def draw(self):
         x, y = pygame.display.get_surface().get_size()
         self.screen.fill(self.background)
-        self.play = MainMenuButton(self.screen, "Play", (x/2) - 300, 150)
-        self.options = MainMenuButton(self.screen, "Options", (x / 2) - 300, 300)
-        self.rules = MainMenuButton(self.screen, "Rules", (x / 2) - 300, 450)
-        self.exit = MainMenuButton(self.screen, "Exit", (x / 2) - 300, 600)
+        self.play = MainMenuButton(self.screen, "Play", (x/2) - 300, 100)
+        self.options = MainMenuButton(self.screen, "Options", (x / 2) - 300, 250)
+        self.rules = MainMenuButton(self.screen, "Rules", (x / 2) - 300, 400)
+        self.exit = MainMenuButton(self.screen, "Exit", (x / 2) - 300, 550)
 
         self.play.draw()
         self.options.draw()
@@ -72,7 +75,7 @@ class MainMenuButton:
         self.textColor = (100, 100, 100)
         self. buttonText = text
         self.rect = (posx, posy, width, height)
-        self.rectClicked = (posx+50, posy, width-100, height)
+        self.rectClicked = (posx+10, posy+10, width-20, height-20)
 
         self.font = pygame.font.get_default_font()
         self.renderer = pygame.font.Font(self.font, 50)
@@ -98,7 +101,6 @@ class MainMenuButton:
             self.screen.blit(label, (self.posx+((self.width/2)-x/2), self.posy+((self.height/2)-y/2)))
 
     def isClicked(self):
-
         mouseX, mouseY = pygame.mouse.get_pos()
         if (mouseX > self.posx and mouseX < (self.posx+self.width)) and (mouseY > self.posy and mouseY < (self.posy+self.height)):
             if pygame.mouse.get_pressed()[0]:
