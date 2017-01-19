@@ -17,18 +17,17 @@ class Game:
 
     def run(self):
         while not self.gameExit:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.gameExit = True
             mainmenu = MainMenu(self.screen)
             mainmenu.draw()
             pygame.display.flip()
 
-            if mainmenu.exit.isClicked():
-                self.gameExit = True
-                pygame.time.delay(200)
-
             self.clock.tick(self.fps)
+            for event in pygame.event.get():
+                print(event)
+                if event.type == pygame.QUIT:
+                    self.gameExit = True
+                if (event.type is pygame.MOUSEBUTTONUP) and mainmenu.exit.isInRange():
+                    self.gameExit = True
 
         pygame.quit()
         sys.exit()
@@ -62,6 +61,8 @@ class MainMenu:
         self.rules.draw()
         self.exit.draw()
 
+
+
 class MainMenuButton:
 
     def __init__(self, screen, text, posx, posy, width = 600, height = 100):
@@ -72,8 +73,8 @@ class MainMenuButton:
         self.screen = screen
         self.buttonColor = (0, 0, 200)
         self.buttonHighlight = (0, 0, 255)
-        self.textColor = (100, 100, 100)
-        self. buttonText = text
+        self.textColor = (200, 200, 200)
+        self.buttonText = text
         self.rect = (posx, posy, width, height)
         self.rectClicked = (posx+10, posy+10, width-20, height-20)
 
@@ -81,14 +82,15 @@ class MainMenuButton:
         self.renderer = pygame.font.Font(self.font, 50)
 
     def draw(self):
-
         mouseX, mouseY = pygame.mouse.get_pos()
         if (mouseX > self.posx and mouseX < (self.posx+self.width)) and (mouseY > self.posy and mouseY < (self.posy+self.height)):
-            if self.isClicked():
+            if self.isInRange() and pygame.mouse.get_pressed()[0]:
+                self.renderer = pygame.font.Font(self.font, 40)
                 label = self.renderer.render(self.buttonText, True, self.textColor)
                 x, y = label.get_size()
                 pygame.draw.rect(self.screen, self.buttonHighlight, self.rectClicked, 0)  # zero for filled square
                 self.screen.blit(label, (self.posx + ((self.width / 2) - x / 2), self.posy + ((self.height / 2) - y / 2)))
+                self.renderer = pygame.font.Font(self.font, 50)
             else:
                 label = self.renderer.render(self.buttonText, True, self.textColor)
                 x, y = label.get_size()
@@ -100,13 +102,12 @@ class MainMenuButton:
             pygame.draw.rect(self.screen, self.buttonColor, self.rect, 0) # zero for filled square
             self.screen.blit(label, (self.posx+((self.width/2)-x/2), self.posy+((self.height/2)-y/2)))
 
-    def isClicked(self):
+    def isInRange(self):
         mouseX, mouseY = pygame.mouse.get_pos()
         if (mouseX > self.posx and mouseX < (self.posx+self.width)) and (mouseY > self.posy and mouseY < (self.posy+self.height)):
-            if pygame.mouse.get_pressed()[0]:
-                return True
-            else:
-                return False
+            return True
+        else:
+            return False
 
 
 
