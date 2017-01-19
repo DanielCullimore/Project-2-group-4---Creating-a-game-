@@ -19,8 +19,11 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.gameExit = True
+            mainmenu = MainMenu(self.screen)
+            mainmenu.draw()
+            if mainmenu.exit.isClicked():
+                self.gameExit = True
 
-            MainMenu(self.screen).draw()
             pygame.display.flip()
             self.clock.tick(self.fps)
 
@@ -46,10 +49,15 @@ class MainMenu:
     def draw(self):
         x, y = pygame.display.get_surface().get_size()
         self.screen.fill(self.background)
-        MainMenuButton(self.screen, "Play", (x/2) - 300, 150).draw()
-        MainMenuButton(self.screen, "Options", (x / 2) - 300, 300).draw()
-        MainMenuButton(self.screen, "Rules", (x / 2) - 300, 450).draw()
-        MainMenuButton(self.screen, "Exit", (x / 2) - 300, 600).draw()
+        self.play = MainMenuButton(self.screen, "Play", (x/2) - 300, 150)
+        self.options = MainMenuButton(self.screen, "Options", (x / 2) - 300, 300)
+        self.rules = MainMenuButton(self.screen, "Rules", (x / 2) - 300, 450)
+        self.exit = MainMenuButton(self.screen, "Exit", (x / 2) - 300, 600)
+
+        self.play.draw()
+        self.options.draw()
+        self.rules.draw()
+        self.exit.draw()
 
 class MainMenuButton:
 
@@ -64,23 +72,39 @@ class MainMenuButton:
         self.textColor = (100, 100, 100)
         self. buttonText = text
         self.rect = (posx, posy, width, height)
+        self.rectClicked = (posx+50, posy, width-100, height)
 
         self.font = pygame.font.get_default_font()
         self.renderer = pygame.font.Font(self.font, 50)
 
     def draw(self):
-        mouseX, mouseY = pygame.mouse.get_pos()
 
+        mouseX, mouseY = pygame.mouse.get_pos()
         if (mouseX > self.posx and mouseX < (self.posx+self.width)) and (mouseY > self.posy and mouseY < (self.posy+self.height)):
-            label = self.renderer.render(self.buttonText, True, self.textColor)
-            x, y = label.get_size()
-            pygame.draw.rect(self.screen, self.buttonHighlight, self.rect, 0)  # zero for filled square
-            self.screen.blit(label, (self.posx + ((self.width / 2) - x / 2), self.posy + ((self.height / 2) - y / 2)))
+            if self.isClicked():
+                label = self.renderer.render(self.buttonText, True, self.textColor)
+                x, y = label.get_size()
+                pygame.draw.rect(self.screen, self.buttonHighlight, self.rectClicked, 0)  # zero for filled square
+                self.screen.blit(label, (self.posx + ((self.width / 2) - x / 2), self.posy + ((self.height / 2) - y / 2)))
+            else:
+                label = self.renderer.render(self.buttonText, True, self.textColor)
+                x, y = label.get_size()
+                pygame.draw.rect(self.screen, self.buttonHighlight, self.rect, 0)  # zero for filled square
+                self.screen.blit(label, (self.posx + ((self.width / 2) - x / 2), self.posy + ((self.height / 2) - y / 2)))
         else:
             label = self.renderer.render(self.buttonText, True, self.textColor)
             x, y = label.get_size()
             pygame.draw.rect(self.screen, self.buttonColor, self.rect, 0) # zero for filled square
             self.screen.blit(label, (self.posx+((self.width/2)-x/2), self.posy+((self.height/2)-y/2)))
+
+    def isClicked(self):
+
+        mouseX, mouseY = pygame.mouse.get_pos()
+        if (mouseX > self.posx and mouseX < (self.posx+self.width)) and (mouseY > self.posy and mouseY < (self.posy+self.height)):
+            if pygame.mouse.get_pressed()[0]:
+                return True
+            else:
+                return False
 
 
 
