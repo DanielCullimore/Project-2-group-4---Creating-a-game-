@@ -1,5 +1,6 @@
 import pygame
 import sys
+import pygame.gfxdraw
 
 
 class Game:
@@ -59,6 +60,12 @@ class Game:
                         elif self.playMenu.buttonList[0]:
                             self.state = "spMenu"
                     elif self.state is "spMenu":
+                        if self.spMenu.buttonList[0]:
+                            SinglePlayer(self.screen, self.fps, 2).run()
+                        if self.spMenu.buttonList[1]:
+                            SinglePlayer(self.screen, self.fps, 3).run()
+                        if self.spMenu.buttonList[2]:
+                            SinglePlayer(self.screen, self.fps, 4).run()
                         if self.spMenu.buttonList[3]:
                             self.state = "playMenu"
 
@@ -179,6 +186,54 @@ class Label:
             self.screen.blit(self.labelObject, (self.posx, self.posy))
         else:
             print("Position of a label is not set.")
+
+
+class SinglePlayer:
+    def __init__(self, screen, fps, playerAmount):
+        self.width = pygame.display.get_surface().get_size()[0]
+        self.height = pygame.display.get_surface().get_size()[1]
+        self.playerAmount = playerAmount
+        self.screen = screen
+        self.gameReturn = False
+        self.gameExit = False
+        self.clock = pygame.time.Clock()
+        self.background = pygame.image.load("res/spelbord.jpg")
+        self.backgroundtransformed = pygame.transform.scale(self.background, (int(self.width * 0.5), int(self.height) - 200))
+        self.fps = fps
+
+    def run(self):
+        while not self.gameExit and not self.gameReturn:
+            self.draw()
+            pygame.display.flip()
+            self.clock.tick(self.fps)
+            for event in pygame.event.get():
+                if event.type is pygame.QUIT:
+                    self.gameExit = True
+        if self.gameExit:
+            pygame.quit()
+            sys.exit()
+        else:
+            return
+
+    def draw(self):
+        self.screen.fill((0, 0, 0))
+        self.screen.blit(self.backgroundtransformed, (self.width/4, 100))
+        pygame.draw.rect(self.screen,(200,200,200),pygame.Rect(0, self.height-80, self.width, self.height))
+        pygame.draw.rect(self.screen, (150, 150, 150), pygame.Rect(0, self.height - 20, self.width, self.height))
+        pygame.gfxdraw.aaellipse(self.screen, int(self.width / 16 * 5), self.height-50, 50, 25, (255, 255, 0))
+        pygame.gfxdraw.filled_ellipse(self.screen, int(self.width / 16 * 5), self.height-50, 50, 25, (255, 255, 0))
+        pygame.gfxdraw.aaellipse(self.screen, int(self.width / 16 * 7), self.height-50, 50, 25, (0, 0, 255))
+        pygame.gfxdraw.filled_ellipse(self.screen, int(self.width / 16 * 7), self.height-50, 50, 25, (0, 0, 255))
+        pygame.gfxdraw.aaellipse(self.screen, int(self.width / 16 * 9), self.height-50, 50, 25, (255, 0, 0))
+        pygame.gfxdraw.filled_ellipse(self.screen, int(self.width / 16 * 9), self.height-50, 50, 25, (255, 0, 0))
+        pygame.gfxdraw.aaellipse(self.screen, int(self.width / 16 * 11), self.height-50, 50, 25, (0, 255, 0))
+        pygame.gfxdraw.filled_ellipse(self.screen, int(self.width / 16 * 11), self.height-50, 50, 25, (0, 255, 0))
+
+
+
+
+
+
 
 if __name__ == '__main__':
     Game().run()
