@@ -32,7 +32,7 @@ screen_height = 600
 screen = pygame.display.set_mode([screen_width, screen_height])
 
 #load image
-background = pygame.image.load("spelbord.jpg")
+background = pygame.image.load("Background/spelbord.jpg")
 #Transform image
 backgroundtransformed = pygame.transform.scale(background,(int(0.5 * screen_width),int(0.5 * screen_height)))
 
