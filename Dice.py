@@ -9,14 +9,6 @@ Grey = (190,190,190)
 White = (0,0,0)
 Brown = (255,222,173)
 
-def diceroll():
-    keys = pygame.key.get_pressed()
-    #change space for button on screen
-    if keys[pygame.K_SPACE]:
-        result = random.randrange(1,7,1)
-
-        return result
-
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, color, width, height):
@@ -69,14 +61,17 @@ font = pygame.font.Font(None,20)
 
 
 # -------- Main Program Loop -----------
+result = None
 while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
+        if event.type is pygame.KEYUP and pygame.key.name(pygame.K_SPACE):
+            result = random.randrange(1,7,1)
     # Clear the screen
     screen.fill(White)
     #dice rolls
-    diceresult = diceroll()
+    diceresult = result
     dice_text = font.render("Dice result: {}".format(diceresult),1,Red)
     screen.blit(dice_text, (16, screen_height *0.95))
 
