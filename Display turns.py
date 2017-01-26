@@ -13,12 +13,16 @@ font = pygame.font.SysFont('moonspace', 30)
 
 def players_turn(msg, color):
     screen_text = font.render(msg, True, color)
-    screen.blit(screen_text,(10, 575))
+    screen.blit(screen_text,(10, 700))
     pygame.display.update()
-
-players_turn("Player 1 turn", White)
-
-
+if Whoseturn == 0:
+    players_turn("Player 1 turn", White)
+elif Whoseturn == 1:
+    players_turn("Player 2 turn", White)
+elif Whoseturn == 2:
+    players_turn("Player 3 turn", White)
+elif Whoseturn == 3:
+    players_turn("Player 4 turn", White)
 # Loop until the user clicks the close button.
 done = False
 
