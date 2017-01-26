@@ -1,84 +1,250 @@
 import pygame
 import sys
-import pygame.gfxdraw
+from random import *
+import math
 
 
 class Game:
 
     def __init__(self):
+        # Init pygame
         pygame.init()
         pygame.font.init()
         self.set_screen()
         self.fps = 60
         self.gameExit = False
         self.clock = pygame.time.Clock()
-        self.state = "mainMenu"
 
-        self.mainMenu = Menu(self.screen)
-        self.mainMenu.addButton("Play", (self.width/2)-300, 100)
-        self.mainMenu.addButton("Options", (self.width/2)-300, 250)
-        self.mainMenu.addButton("Rules", (self.width/2)-300, 400)
-        self.mainMenu.addButton("Exit", (self.width/2)-300, 550)
+        # Init game
+        self.screenList =[]
+        self.whoseTurn = 0
+        self.nrPlayers = 4
 
-        self.playMenu = Menu(self.screen)
-        self.playMenu.addButton("Single Player", (self.width/2)-300, 100)
-        self.playMenu.addButton("Back", (self.width/2)-300, 250)
+        # Init special action
+        self.tempTurn = False
+        self.whoseTempTurn = 0
 
-        self.spMenu = Menu(self.screen)
-        self.spMenu.addLabel("Opponents: ", (self.width/2) - 600, 125)
-        self.spMenu.addButton(" 2 ", (self.width/2)-200, 100, 100, 100)
-        self.spMenu.addButton(" 3 ", (self.width/2)-50, 100, 100, 100)
-        self.spMenu.addButton(" 4 ", (self.width/2)+100, 100, 100, 100)
-        self.spMenu.addButton("Back", 340, 250)
-
-
+        # Init screens
+        self.initScreens()
 
     def run(self):
         while not self.gameExit:
-            if self.state is "mainMenu":
-                self.mainMenu.draw()
-            elif self.state is "playMenu":
-                self.playMenu.draw()
-            elif self.state is "spMenu":
-                self.spMenu.draw()
+            # Display pygame screen
+            for mainScreen in self.screenList:  # For all main screens
+                for subScreen in mainScreen:    # For all subscreens within main screens (for convenience a mainscreen is also considered subscreen)
+                    if self.state is subScreen: # Filter out the pygame screen that should be active (the var self.state is changed through menu buttons)
+                        subScreen.draw()        # Draw that screen
 
             pygame.display.flip()
 
+            # Update pygame screen
             self.clock.tick(self.fps)
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.gameExit = True
                 if event.type is pygame.MOUSEBUTTONUP:
-                    if self.state is "mainMenu":
-                        if self.mainMenu.buttonList[3]:
-                            self.gameExit = True
-                        elif self.mainMenu.buttonList[0]:
-                            self.state = "playMenu"
-                    elif self.state is "playMenu":
-                        if self.playMenu.buttonList[1]:
-                            self.state = "mainMenu"
-                        elif self.playMenu.buttonList[0]:
-                            self.state = "spMenu"
-                    elif self.state is "spMenu":
-                        if self.spMenu.buttonList[0]:
-                            SinglePlayer(self.screen, self.fps, 2).run()
-                        if self.spMenu.buttonList[1]:
-                            SinglePlayer(self.screen, self.fps, 3).run()
-                        if self.spMenu.buttonList[2]:
-                            SinglePlayer(self.screen, self.fps, 4).run()
-                        if self.spMenu.buttonList[3]:
-                            self.state = "playMenu"
+                    self.buttonFunctions()
+                    self.dice()
+                    self.directionFunction()
+                    self.state = self.screenList[self.activeMainScreen][self.activeSubScreen]
 
+        # Exit if self.gameExit
         pygame.quit()
         sys.exit()
 
+    # Methods
     def set_screen(self, width = 1280, height = 720):
         self.width = width
         self.height = height
         resolution = (width, height)
         self.screen = pygame.display.set_mode(resolution)
 
+    def initScreens(self):
+        # Screens are in a list, so that scrolling through screens is not hardcoded.
+        # 2d list because we make a distinction between main screens and subscreens:
+        #   Main screens can take you further in the main screen list and also allows you to access its own subscreens
+        #   A subscreen is a screen that belongs to a main screen, you access it through its mainscreen.
+        #   When you exit the subscreen you go back to its main screen.
+        #
+        # For all buttons in the addButton list,
+        #   the first button in the list takes you further in the main screen list
+        #   The last button in the list takes you a screen backwards.
+        #   Screens in between take you to subscreens
+        #   (TO BE CODED: a subscreen does not require a 'first button that takes you forward')
+        #
+        # init main screen: Main Menu
+        self.screenList.append([])  # Make room for new screen
+        self.screenList[0].append(Menu(self.screen))  # Insert mainScreen (class object in list.)
+        self.screenList[0][0].addButton("Play", (self.width / 2) - 300, 100)  # Add buttons to the screen
+        self.screenList[0][0].addButton("Options", (self.width / 2) - 300, 250)
+        self.screenList[0][0].addButton("Rules", (self.width / 2) - 300, 400)
+        self.screenList[0][0].addButton("Exit", (self.width / 2) - 300, 550)
+        # init subscreen: Options
+        self.screenList[0].append(Menu(self.screen))  # insert subScreen (class object in list.)
+        self.screenList[0][1].addButton("Psuedo Play", -100, -100)
+        self.screenList[0][1].addButton("Back", (self.width / 2) - 300, 550)
+        # init subscreen: Rules
+        self.screenList[0].append(Menu(self.screen))
+        self.screenList[0][2].addButton("Psuedo Play", -100, -100)
+        self.screenList[0][2].addButton("Back", (self.width / 2) - 300, 550)
 
+        # Init main screen: Choosing play-mode
+        self.screenList.append([])  # Make room for new screen
+        self.screenList[1].append(Menu(self.screen))
+        self.screenList[1][0].addButton("Single Player", (self.width / 2) - 300, 100)
+        self.screenList[1][0].addButton("Back", (self.width / 2) - 300, 250)
+
+        # Init main screen: Single player play-mode settings screen
+        self.screenList.append([])  # Make room for new screen
+        self.screenList[2].append(Menu(self.screen))
+        self.screenList[2][0].addButton("Play", (self.width / 2) - 300, 100)
+        self.screenList[2][0].addLabel("Players = 4", (self.width / 2) - 600, 300)
+        self.screenList[2][0].addButton("Back", 340, 450)
+
+        # Init main screen: Actual playing board
+        self.screenList.append([])  # Make room for new screen
+        self.screenList[3].append(playScreen(self.screen))
+        self.screenList[3][0].addButton("Psuedo Play", -100, -100)
+        self.screenList[3][0].addButton("Options", (self.width) - 255, 75, 270, 75)
+        self.screenList[3][0].addButton("Psuedo Exit", -100, -100)
+        self.screenList[3][0].addPlayer((255, 0, 0), "Red Bob", 337, self.height - 100)
+        self.screenList[3][0].addPlayer((0, 255, 0), "Green Frank", 337 + 160, self.height - 100)
+        self.screenList[3][0].addPlayer((0, 0, 255), "Blue Mike", 337 + (160 * 2), self.height - 100)
+        self.screenList[3][0].addPlayer((255, 0, 255), "Magenta Fox", 337 + (160 * 3), self.height - 100)
+        self.screenList[3][0].addDice("Dice", 50, 50)
+        self.direction = 0
+        self.screenList[3][0].addDirection("Direction", 150, 50)
+        # Init subscreen: pauze game
+        self.screenList[3].append(Menu(self.screen))
+        self.screenList[3][1].addButton("Psuedo Play", -100, -100)
+        self.screenList[3][1].addButton("Continue", (self.width / 2) - 300, 100)
+        self.screenList[3][1].addButton("Exit", (self.width / 2) - 300, 550)
+
+        # Init set screen to be active on default
+        self.activeMainScreen = 0
+        self.activeSubScreen = 0
+        self.state = self.screenList[self.activeMainScreen][self.activeSubScreen]
+
+    def buttonFunctions(self):
+        if (len(self.state.buttonList)) > 0:    # if more than 1 button
+            if self.state.buttonList[0]:        # if button is pressed
+                self.activeMainScreen += 1      # go a main screen forward
+                self.activeSubScreen = 0
+        if (len(self.state.buttonList)) > 1:
+            if self.state.buttonList[-1]:
+                if self.activeSubScreen == 0:
+                    if self.activeMainScreen == 0:
+                        self.gameExit = True
+                    else:
+                        self.activeMainScreen -= 1
+                        self.activeSubScreen = 0
+                else:
+                    self.activeSubScreen = 0
+        if (len(self.state.buttonList) - 2) >= 0:  # if more than 2 buttons
+            for i in range(len(self.state.buttonList) - 1):
+                if self.state.buttonList[i]:
+                    self.activeSubScreen = i
+
+    def dice(self):
+        if self.screenList[3][0].dice:
+            self.diceNumber = randint(1, 6)
+            self.screenList[3][0].dice.buttonText = str(self.diceNumber)
+            if (self.tempTurn):
+                self.screenList[3][0].playerList[self.whoseTempTurn].posy += (34.5 * self.diceNumber)
+            else:
+                if self.direction is 0:
+                    self.screenList[3][0].playerList[self.whoseTurn].posy -= (34.5 * self.diceNumber)
+                if self.direction is 1:
+                    self.screenList[3][0].playerList[self.whoseTurn].posx += (80 * self.diceNumber)
+                if self.direction is 2:
+                    self.screenList[3][0].playerList[self.whoseTurn].posy += (34.5 * self.diceNumber)
+                if self.direction is 3:
+                    self.screenList[3][0].playerList[self.whoseTurn].posx -= (80 * self.diceNumber)
+            self.tempTurn = False
+
+            index = 0
+            for player in self.screenList[3][0].playerList:
+                if player is not self.screenList[3][0].playerList[self.whoseTurn]:
+                    x1 = player.posx
+                    x2 = self.screenList[3][0].playerList[self.whoseTurn].posx
+                    y1 = player.posy
+                    y2 = self.screenList[3][0].playerList[self.whoseTurn].posy
+                    if (math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) < 40):
+                        self.tempTurn = True
+                        self.whoseTempTurn = index
+                index += 1
+
+            self.whoseTurn = (self.whoseTurn + 1) % self.nrPlayers
+
+    def directionFunction(self):
+        if self.screenList[3][0].direction:
+            self.direction = (self.direction + 1) % 4
+            if self.direction is 0:
+                self.screenList[3][0].direction.buttonText = "Up"
+            if self.direction is 1:
+                self.screenList[3][0].direction.buttonText = "Right"
+            if self.direction is 2:
+                self.screenList[3][0].direction.buttonText = "Down"
+            if self.direction is 3:
+                self.screenList[3][0].direction.buttonText = "Left"
+
+
+class Player():
+    def __init__(self, screen, color, name, posx, posy):
+        self.screen = screen
+        self.color = color
+        self.name = name
+        self.posx = posx
+        self.posy = posy
+        self.sizex = 50
+        self.sizey = 35
+
+    def draw(self):
+        pygame.draw.rect(self.screen, self.color, (self.posx, self.posy, self.sizex,self.sizey))
+        if self.posy < 0:
+            print(self.name+" WON! posy= "+str(self.posy))
+
+
+
+
+class playScreen:
+    def __init__(self, screen):
+        self.screen = screen
+        #self.nrPlayers = 4
+        self.background = pygame.image.load("res/spelbord.jpg")
+        self.backgroundtransformed = pygame.transform.scale(self.background, (int(1280 * 0.5), int(720) - 200))
+        self.buttonList = []
+        self.labelList = []
+        self.playerList = []
+        self.actionList = []
+
+    def draw(self):
+        self.screen.fill((0, 0, 0))
+        self.screen.blit(self.backgroundtransformed, (1280 / 4, 100))
+
+        for button in self.buttonList:
+            button.draw()
+        for label in self.labelList:
+            label.draw()
+        for player in self.playerList:
+            player.draw()
+        self.dice.draw()
+        self.direction.draw()
+
+    def addButton(self, text, posx, posy, width = 600, height = 100):
+        self.buttonList.append(MenuButton(self.screen, text, posx, posy, width, height))
+
+    def addLabel(self, text, posx, posy, size = 50, color = (200, 200, 200)):
+        self.labelList.append(Label(self.screen, text, posx, posy, size, color))
+
+    def addPlayer(self, color, name, posx, posy):
+        self.playerList.append(Player(self.screen, color, name, posx, posy))
+
+    def addDice(self, name, posx, posy, width = 100, height = 100):
+        self.dice = MenuButton(self.screen, name, posx, posy, width, height)
+
+    def addDirection(self, text, posx, posy, width = 100, height = 100):
+        self.direction = MenuButton(self.screen, text, posx, posy, width, height)
 
 class Menu:
     def __init__(self, screen):
@@ -94,8 +260,8 @@ class Menu:
         for label in self.labelList:
             label.draw()
 
-    def addButton(self, text, x, y, width = 600, height = 100):
-        self.buttonList.append(MenuButton(self.screen, text, x, y, width, height))
+    def addButton(self, text, posx, posy, width = 600, height = 100):
+        self.buttonList.append(MenuButton(self.screen, text, posx, posy, width, height))
 
     def addLabel(self, text, posx, posy, size = 50, color = (200, 200, 200)):
         self.labelList.append(Label(self.screen, text, posx, posy, size, color))
@@ -122,6 +288,9 @@ class MenuButton:
         self.labelContainer.setPosition(labelposx, labelposy)
 
     def draw(self):
+        self.labelContainer = Label(self.screen, self.buttonText)
+        labelposx, labelposy = self._getLabelPosition()
+        self.labelContainer.setPosition(labelposx, labelposy)
         """Draws the button in its current state"""
         if self.__bool__():
             if pygame.mouse.get_pressed()[0]:  # clicked state
@@ -186,54 +355,6 @@ class Label:
             self.screen.blit(self.labelObject, (self.posx, self.posy))
         else:
             print("Position of a label is not set.")
-
-
-class SinglePlayer:
-    def __init__(self, screen, fps, playerAmount):
-        self.width = pygame.display.get_surface().get_size()[0]
-        self.height = pygame.display.get_surface().get_size()[1]
-        self.playerAmount = playerAmount
-        self.screen = screen
-        self.gameReturn = False
-        self.gameExit = False
-        self.clock = pygame.time.Clock()
-        self.background = pygame.image.load("res/spelbord.jpg")
-        self.backgroundtransformed = pygame.transform.scale(self.background, (int(self.width * 0.5), int(self.height) - 200))
-        self.fps = fps
-
-    def run(self):
-        while not self.gameExit and not self.gameReturn:
-            self.draw()
-            pygame.display.flip()
-            self.clock.tick(self.fps)
-            for event in pygame.event.get():
-                if event.type is pygame.QUIT:
-                    self.gameExit = True
-        if self.gameExit:
-            pygame.quit()
-            sys.exit()
-        else:
-            return
-
-    def draw(self):
-        self.screen.fill((0, 0, 0))
-        self.screen.blit(self.backgroundtransformed, (self.width/4, 100))
-        pygame.draw.rect(self.screen,(200,200,200),pygame.Rect(0, self.height-80, self.width, self.height))
-        pygame.draw.rect(self.screen, (150, 150, 150), pygame.Rect(0, self.height - 20, self.width, self.height))
-        pygame.gfxdraw.aaellipse(self.screen, int(self.width / 16 * 5), self.height-50, 50, 25, (255, 255, 0))
-        pygame.gfxdraw.filled_ellipse(self.screen, int(self.width / 16 * 5), self.height-50, 50, 25, (255, 255, 0))
-        pygame.gfxdraw.aaellipse(self.screen, int(self.width / 16 * 7), self.height-50, 50, 25, (0, 0, 255))
-        pygame.gfxdraw.filled_ellipse(self.screen, int(self.width / 16 * 7), self.height-50, 50, 25, (0, 0, 255))
-        pygame.gfxdraw.aaellipse(self.screen, int(self.width / 16 * 9), self.height-50, 50, 25, (255, 0, 0))
-        pygame.gfxdraw.filled_ellipse(self.screen, int(self.width / 16 * 9), self.height-50, 50, 25, (255, 0, 0))
-        pygame.gfxdraw.aaellipse(self.screen, int(self.width / 16 * 11), self.height-50, 50, 25, (0, 255, 0))
-        pygame.gfxdraw.filled_ellipse(self.screen, int(self.width / 16 * 11), self.height-50, 50, 25, (0, 255, 0))
-
-
-
-
-
-
 
 if __name__ == '__main__':
     Game().run()
