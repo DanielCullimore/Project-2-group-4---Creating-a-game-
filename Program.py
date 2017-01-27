@@ -16,7 +16,7 @@ class Game:
         self.clock = pygame.time.Clock()
 
         # Init game
-        self.screenList =[]
+        self.screenList =[] # List containing all screens
         self.whoseTurn = 0
         self.nrPlayers = 4
 
@@ -27,13 +27,14 @@ class Game:
         # Init screens
         self.initScreens()
 
+
     def run(self):
         while not self.gameExit:
             # Display pygame screen
-            for mainScreen in self.screenList:  # For all main screens
-                for subScreen in mainScreen:    # For all subscreens within main screens (for convenience a mainscreen is also considered subscreen)
-                    if self.state is subScreen: # Filter out the pygame screen that should be active (the var self.state is changed through menu buttons)
-                        subScreen.draw()        # Draw that screen
+            for mainScreen in self.screenList:               # For all main screens
+                for screen in mainScreen:                    # For all screens within main screens
+                    if self.state is screen:                 # Filter out the pygame screen that should be active (the var self.state is changed through menu buttons)
+                        screen.draw( *(self.passValues()) )  # Draw that screen, with var passed parameters
 
             pygame.display.flip()
 
@@ -48,7 +49,7 @@ class Game:
                     self.directionFunction()
                     self.state = self.screenList[self.activeMainScreen][self.activeSubScreen]
 
-        # Exit if self.gameExit
+        # Exit when self.gameExit
         pygame.quit()
         sys.exit()
 
@@ -60,18 +61,12 @@ class Game:
         self.screen = pygame.display.set_mode(resolution)
 
     def initScreens(self):
-        # Screens are in a list, so that scrolling through screens is not hardcoded.
-        # 2d list because we make a distinction between main screens and subscreens:
-        #   Main screens can take you further in the main screen list and also allows you to access its own subscreens
-        #   A subscreen is a screen that belongs to a main screen, you access it through its mainscreen.
-        #   When you exit the subscreen you go back to its main screen.
-        #
-        # For all buttons in the addButton list,
-        #   the first button in the list takes you further in the main screen list
-        #   The last button in the list takes you a screen backwards.
-        #   Screens in between take you to subscreens
-        #   (TO BE CODED: a subscreen does not require a 'first button that takes you forward')
-        #
+        # Screens are in a grid
+        # screen[0][0]
+        # screen[1][0]  screen[1][1]    screen[1][2]
+        # screen[2][0]
+        # screen[3][0] screen[3][1]
+        # etc.. So you can say screen = screen[currentScreen+1][0]
         # init main screen: Main Menu
         self.screenList.append([])  # Make room for new screen
         self.screenList[0].append(Menu(self.screen))  # Insert mainScreen (class object in list.)
@@ -81,11 +76,9 @@ class Game:
         self.screenList[0][0].addButton("Exit", (self.width / 2) - 300, 550)
         # init subscreen: Options
         self.screenList[0].append(Menu(self.screen))  # insert subScreen (class object in list.)
-        self.screenList[0][1].addButton("Psuedo Play", -100, -100)
         self.screenList[0][1].addButton("Back", (self.width / 2) - 300, 550)
         # init subscreen: Rules
         self.screenList[0].append(Menu(self.screen))
-        self.screenList[0][2].addButton("Psuedo Play", -100, -100)
         self.screenList[0][2].addButton("Back", (self.width / 2) - 300, 550)
 
         # Init main screen: Choosing play-mode
@@ -116,30 +109,42 @@ class Game:
         self.screenList[3][0].addDirection("Direction", 150, 50)
         # Init subscreen: pauze game
         self.screenList[3].append(Menu(self.screen))
-        self.screenList[3][1].addButton("Psuedo Play", -100, -100)
         self.screenList[3][1].addButton("Continue", (self.width / 2) - 300, 100)
-        self.screenList[3][1].addButton("Exit", (self.width / 2) - 300, 550)
+        self.screenList[3][1].addButton("Main Menu", (self.width / 2) - 300, 550)
 
         # Init set screen to be active on default
         self.activeMainScreen = 0
         self.activeSubScreen = 0
         self.state = self.screenList[self.activeMainScreen][self.activeSubScreen]
 
+    def passValues(self):
+        if self.state == self.screenList[3][0]:
+            return [self.whoseTurn, self.tempTurn, self.whoseTempTurn]
+        else:
+            return []
+
     def buttonFunctions(self):
-        if (len(self.state.buttonList)) > 0:    # if more than 1 button
-            if self.state.buttonList[0]:        # if button is pressed
-                self.activeMainScreen += 1      # go a main screen forward
-                self.activeSubScreen = 0
-        if (len(self.state.buttonList)) > 1:
-            if self.state.buttonList[-1]:
-                if self.activeSubScreen == 0:
-                    if self.activeMainScreen == 0:
-                        self.gameExit = True
-                    else:
-                        self.activeMainScreen -= 1
-                        self.activeSubScreen = 0
-                else:
+        # Defining the action of button nr.1
+        if (len(self.state.buttonList)) > 0:        # if more than 0 button
+            if self.state.buttonList[0]:            #   if button is pressed
+                if self.activeSubScreen > 0:        #       if a subscreen
+                    self.activeSubScreen = 0        #           go back to its main screen
+                else:                               #       else:
+                    self.activeMainScreen += 1      #           go a main screen forward
                     self.activeSubScreen = 0
+        # Defining the action of button nr.-1 (last)
+        if (len(self.state.buttonList)) > 1:        # if more than 1 button
+            if self.state.buttonList[-1]:           #   if last button is pressed
+                if self.activeSubScreen == 0:       #       if not subscreen
+                    if self.activeMainScreen == 0:  #           if screen[0][0]
+                        self.gameExit = True        #               Exit
+                    else:                           #           else:
+                        self.activeMainScreen -= 1  #               screen -= 1
+                        self.activeSubScreen = 0
+                else:                               #       else (if subscreen, and last button pressed)
+                    self.activeMainScreen = 0       #            go to main menu
+                    self.activeSubScreen = 0
+        # Defining the action of other buttons ("Take me to subscreen" buttons)
         if (len(self.state.buttonList) - 2) >= 0:  # if more than 2 buttons
             for i in range(len(self.state.buttonList) - 1):
                 if self.state.buttonList[i]:
@@ -188,7 +193,6 @@ class Game:
             if self.direction is 3:
                 self.screenList[3][0].direction.buttonText = "Left"
 
-
 class Player():
     def __init__(self, screen, color, name, posx, posy):
         self.screen = screen
@@ -205,8 +209,6 @@ class Player():
             print(self.name+" WON! posy= "+str(self.posy))
 
 
-
-
 class playScreen:
     def __init__(self, screen):
         self.screen = screen
@@ -217,8 +219,9 @@ class playScreen:
         self.labelList = []
         self.playerList = []
         self.actionList = []
+        self.font = pygame.font.SysFont('moonspace', 30)
 
-    def draw(self):
+    def draw(self, whoseTurn, tempTurn, whoseTempTurn):
         self.screen.fill((0, 0, 0))
         self.screen.blit(self.backgroundtransformed, (1280 / 4, 100))
 
@@ -230,6 +233,10 @@ class playScreen:
             player.draw()
         self.dice.draw()
         self.direction.draw()
+        if tempTurn:
+            self.players_turn("Player " + str(self.playerList[whoseTempTurn].name) + " turn", (255, 255, 255))
+        else:
+            self.players_turn("Player "+str(self.playerList[whoseTurn].name)+" turn", (255, 255, 255))
 
     def addButton(self, text, posx, posy, width = 600, height = 100):
         self.buttonList.append(MenuButton(self.screen, text, posx, posy, width, height))
@@ -245,6 +252,11 @@ class playScreen:
 
     def addDirection(self, text, posx, posy, width = 100, height = 100):
         self.direction = MenuButton(self.screen, text, posx, posy, width, height)
+
+    def players_turn(self, msg, color):
+        screen_text = self.font.render(msg, True, color)
+        self.screen.blit(screen_text, (10, 575))
+        pygame.display.update()
 
 class Menu:
     def __init__(self, screen):
@@ -280,6 +292,7 @@ class MenuButton:
         self.buttonHighlight = (0, 0, 255)
         self.textColor = (200, 200, 200)
         self.buttonText = text
+        #self.font = pygame.font.SysFont('moonspace', 10)
         self.rect = (posx, posy, width, height)
         self.rectClicked = (posx+10, posy+10, width-20, height-20)
 
