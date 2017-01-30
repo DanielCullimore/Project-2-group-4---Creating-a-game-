@@ -17,12 +17,6 @@ class Game:
 
         # Init game
         self.screenList =[] # List containing all screens
-        self.whoseTurn = 0
-        self.nrPlayers = 4
-
-        # Init special action
-        self.tempTurn = False
-        self.whoseTempTurn = 0
 
         # Init screens
         self.initScreens()
@@ -45,9 +39,13 @@ class Game:
                     self.gameExit = True
                 if event.type is pygame.MOUSEBUTTONUP:
                     self.buttonFunctions()
-                    self.dice()
-                    self.directionFunction()
+                    if isinstance(self.state, playScreen):
+                        self.dice(self.state)
+                        self.directionFunction(self.state)
                     self.state = self.screenList[self.activeMainScreen][self.activeSubScreen]
+                if event.type is pygame.KEYUP:
+                    if event.key == pygame.K_0:
+                        self.state.whoseTurn = (self.state.whoseTurn + 1) % self.state.nrPlayers
 
         # Exit when self.gameExit
         pygame.quit()
@@ -97,13 +95,14 @@ class Game:
         # Init main screen: Actual playing board
         self.screenList.append([])  # Make room for new screen
         self.screenList[3].append(playScreen(self.screen))
+        self.screenList[3][0].addBoard()
         self.screenList[3][0].addButton("Psuedo Play", -100, -100)
         self.screenList[3][0].addButton("Options", (self.width) - 255, 75, 270, 75)
         self.screenList[3][0].addButton("Psuedo Exit", -100, -100)
-        self.screenList[3][0].addPlayer((255, 0, 0), "Red Bob", 337, self.height - 100)
-        self.screenList[3][0].addPlayer((0, 255, 0), "Green Frank", 337 + 160, self.height - 100)
-        self.screenList[3][0].addPlayer((0, 0, 255), "Blue Mike", 337 + (160 * 2), self.height - 100)
-        self.screenList[3][0].addPlayer((255, 0, 255), "Magenta Fox", 337 + (160 * 3), self.height - 100)
+        self.screenList[3][0].addPlayer((255, 0, 0), "P1: Red Bob", 0, 11)
+        self.screenList[3][0].addPlayer((0, 255, 0), "P2: Green Frank", 1, 11)
+        self.screenList[3][0].addPlayer((0, 0, 255), "P3: Blue Mike", 6, 11)
+        self.screenList[3][0].addPlayer((255, 0, 255), "P4: Magenta Fox", 7, 11)
         self.screenList[3][0].addDice("Dice", 50, 50)
         self.direction = 0
         self.screenList[3][0].addDirection("Direction", 150, 50)
@@ -112,14 +111,19 @@ class Game:
         self.screenList[3][1].addButton("Continue", (self.width / 2) - 300, 100)
         self.screenList[3][1].addButton("Main Menu", (self.width / 2) - 300, 550)
 
+        # Init Win screen
+        self.screenList.append([])  # Make room for new screen
+        self.screenList[4].append(Menu(self.screen))
+
+
         # Init set screen to be active on default
         self.activeMainScreen = 0
         self.activeSubScreen = 0
         self.state = self.screenList[self.activeMainScreen][self.activeSubScreen]
 
     def passValues(self):
-        if self.state == self.screenList[3][0]:
-            return [self.whoseTurn, self.tempTurn, self.whoseTempTurn]
+        if isinstance(self.state, playScreen):
+            return [self.state.whoseTurn, self.state.tempTurn, self.state.whoseTempTurn, self.state]
         else:
             return []
 
@@ -150,93 +154,247 @@ class Game:
                 if self.state.buttonList[i]:
                     self.activeSubScreen = i
 
-    def dice(self):
-        if self.screenList[3][0].dice:
+    def dice(self, state):
+        self.whoseTurn = state.playerList[state.whoseTurn]
+        self.whoseTempTurn = state.playerList[state.whoseTempTurn]
+
+        if state.dice:
             self.diceNumber = randint(1, 6)
-            self.screenList[3][0].dice.buttonText = str(self.diceNumber)
-            if (self.tempTurn):
-                self.screenList[3][0].playerList[self.whoseTempTurn].posy += (34.5 * self.diceNumber)
+            state.dice.buttonText = str(self.diceNumber)
+            if (state.tempTurn):
+                print(1)
+                self.whoseTempTurn.posY -= (1 * self.diceNumber)
             else:
                 if self.direction is 0:
-                    self.screenList[3][0].playerList[self.whoseTurn].posy -= (34.5 * self.diceNumber)
+                    # TEST IF YOU REACH NEW AREA::
+                    if (self.whoseTurn.posY <= 11) and (self.whoseTurn.posY + self.diceNumber > 11):
+                        if self.whoseTurn.posX is 0 or self.whoseTurn.posX is 1:
+                            self.whoseTurn.posX = 2
+                            print("P1")
+                        elif self.whoseTurn.posX is 6 or self.whoseTurn.posX is 7:
+                            self.whoseTurn.posX = 5
+                            print("P4")
+                        elif self.whoseTurn.posX is 2 or self.whoseTurn.posX is 3:
+                            self.whoseTurn.posX = 3
+                            print("P2")
+                        elif self.whoseTurn.posX is 4 or self.whoseTurn.posX is 5:
+                            self.whoseTurn.posX = 4
+                            print("P3")
+                        #self.screenList[3][0].playerList[state.whoseTurn].posX = int((self.screenList[3][0].playerList[state.whoseTurn].posX % 4) + 1)
+                    self.whoseTurn.posY += (1 * self.diceNumber)
                 if self.direction is 1:
-                    self.screenList[3][0].playerList[self.whoseTurn].posx += (80 * self.diceNumber)
+                    self.whoseTurn.posX += (1 * self.diceNumber)
                 if self.direction is 2:
-                    self.screenList[3][0].playerList[self.whoseTurn].posy += (34.5 * self.diceNumber)
+                    self.whoseTurn.posY -= (1 * self.diceNumber)
                 if self.direction is 3:
-                    self.screenList[3][0].playerList[self.whoseTurn].posx -= (80 * self.diceNumber)
-            self.tempTurn = False
+                    self.whoseTurn.posX -= (1 * self.diceNumber)
 
-            index = 0
-            for player in self.screenList[3][0].playerList:
-                if player is not self.screenList[3][0].playerList[self.whoseTurn]:
-                    x1 = player.posx
-                    x2 = self.screenList[3][0].playerList[self.whoseTurn].posx
-                    y1 = player.posy
-                    y2 = self.screenList[3][0].playerList[self.whoseTurn].posy
-                    if (math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2) < 40):
-                        self.tempTurn = True
-                        self.whoseTempTurn = index
-                index += 1
 
-            self.whoseTurn = (self.whoseTurn + 1) % self.nrPlayers
 
-    def directionFunction(self):
-        if self.screenList[3][0].direction:
+    def directionFunction(self, state):
+        if state.direction:
             self.direction = (self.direction + 1) % 4
             if self.direction is 0:
-                self.screenList[3][0].direction.buttonText = "Up"
+                state.direction.buttonText = "Up"
             if self.direction is 1:
-                self.screenList[3][0].direction.buttonText = "Right"
+                state.direction.buttonText = "Right"
             if self.direction is 2:
-                self.screenList[3][0].direction.buttonText = "Down"
+                state.direction.buttonText = "Down"
             if self.direction is 3:
-                self.screenList[3][0].direction.buttonText = "Left"
+                state.direction.buttonText = "Left"
 
 class Player():
     def __init__(self, screen, color, name, posx, posy):
         self.screen = screen
         self.color = color
         self.name = name
-        self.posx = posx
-        self.posy = posy
-        self.sizex = 50
-        self.sizey = 35
+        self.posX = posx
+        self.posY = posy
+        self.sizeX = 50
+        self.sizeY = 35
+
+    def moveAlongBoard(self):
+        # Finish Line
+        if self.posY >= 17:
+            self.posY = 17
+            print(self.name + " WON!")
+
+        # Last 5 steps
+        if self.posY >= 12 and (self.posX > 5 or self.posX < 2):
+            self.posX = (self.posX+2) % 4 + 2
+
+
+        if self.posX > 7 or self.posX < 0:
+            self.posX = self.posX % 8 + 1
+        if self.posY < 0:
+            self.posY = 0
+
+    def checkOverlap(self, state):
+        state.tempTurn = False
+        #index = 0
+        for player in state.playerList:
+            if player is not state.playerList[state.whoseTurn]: #For all other players in playerList
+                x1 = player.posX #other player pos
+                x2 = state.playerList[state.whoseTurn].posX #whoseturn player pos
+                y1 = player.posY
+                y2 = state.playerList[state.whoseTurn].posY
+                if (x1 is x2) and (y1 is y2):  # "Ouch! You hit me! "
+                    state.tempTurn = True
+                    state.whoseTempTurn = state.playerList.index(player)  # p0, p1, p3 or p4
+                    print("whoseTurn = "+str(state.whoseTurn))
+                    print("TempTurn = "+str(state.whoseTempTurn))
+                    break
+                    # self.whoseTurn -= 1
+            #print(index)
+            #index += 1
+
+    def draw(self, state): # State == screen
+        if state.whoseTurn is state.playerList.index(self):
+            self.moveAlongBoard()
+            self.checkOverlap(state)
+
+        pygame.draw.rect(self.screen, self.color, (state.board.grid[self.posX + self.posY*8].posX +8,
+                                                   state.board.grid[self.posX + self.posY*8].posY +2,
+                                                   self.sizeX,self.sizeY))
+
+
+class box:
+    def __init__(self, screen, boxPosX, boxPosY, boxSizeX, boxSizeY, x, y):
+        self.screen = screen
+        self.x = x
+        self.y = y
+        self.boxSizeX = boxSizeX
+        self.boxSizeY = boxSizeY
+        self.boxPosX = boxPosX
+        self.boxPosY = boxPosY
+        self.sizeY = self.boxSizeY / 19
+        self.sizeX = self.boxSizeX/ 8
+        self.posX = self.boxPosX+(self.x*self.sizeX)
+        self.posY = self.boxPosY+self.boxSizeY-(self.y*self.sizeY)-self.sizeY
+        self.category = 0
+        self.color = (0,0,0)
+        self.font = pygame.font.SysFont('moonspace', 12)
+
+        #print(self.boxSizeY)
+        if (self.y is 18 or self.y is 17) and self.x > 1 and self.x < 6:
+            self.category = 5 #FINISH
+        else:
+            if self.y > 11:
+                if self.x is 2:
+                    self.category = 1 # Red
+                elif self.x is 3:
+                    self.category = 2  # Green
+                elif self.x is 4:
+                    self.category = 3
+                elif self.x is 5:
+                    self.category = 4
+            else:
+                if self.x is 1 or x is 0:
+                    self.category = 1 # Red
+                elif self.x is 2 or x is 3:
+                    self.category = 2 # Green
+                elif self.x is 4 or self.x is 5:
+                    self.category = 3
+                elif self.x is 6 or self.x is 7:
+                    self.category = 4
+
+        if self.category is 1:
+            self.color = (67,87,114)
+        elif self.category is 2:
+            self.color = (254,170,58)
+        elif self.category is 3:
+            self.color = (253,96,65)
+        elif self.category is 4:
+            self.color = (177,207,55)
+        elif self.category is 5:
+            self.color = (125,125,125)
+
+        if self.y is 0 or self.y is 1:
+            red, green, blue = self.color
+            self.color = (125,125,125)
+
 
     def draw(self):
-        pygame.draw.rect(self.screen, self.color, (self.posx, self.posy, self.sizex,self.sizey))
-        if self.posy < 0:
-            print(self.name+" WON! posy= "+str(self.posy))
+        pygame.draw.rect(self.screen, self.color, ( self.posX,
+                                                    self.posY,
+                                                    self.sizeX,
+                                                    self.sizeY,))
+        if (self.y is not 0 and self.y is not 1 and self.y is not 17 and self.y is not 18):
+            pygame.draw.rect(self.screen, (0,0,0), (self.posX,
+                                                       self.posY,
+                                                       self.sizeX,
+                                                       self.sizeY,), 2)
+
+
+        screen_text = self.font.render("x="+str(self.x)+"  y="+str(self.y), True, (255,255,255))
+        self.screen.blit(screen_text, (self.posX+self.sizeX/4, self.posY+self.sizeY/4))
+        #pygame.display.update()
+
+class playBoard:
+    def __init__(self, screen):
+        self.screen = screen
+        width, height = self.screen.get_size()
+        self.sizeY = height*0.9
+        self.sizeX = self.sizeY/19*8*2
+        self.posX = width/2-(self.sizeX/2)
+        self.posY = (height-self.sizeY)/2
+
+        self.grid = []
+
+        for y in range(19):
+            for x in range(8):
+                self.grid.append(box(self.screen, self.posX, self.posY ,self.sizeX, self.sizeY, x,y))
+
+    def draw(self):
+        #pygame.draw.rect(self.screen, (150,150,150), (self.posX,self.posY,self.sizeX,self.sizeY))
+        for box in self.grid:
+            box.draw()
 
 
 class playScreen:
     def __init__(self, screen):
         self.screen = screen
-        #self.nrPlayers = 4
-        self.background = pygame.image.load("res/spelbord.jpg")
-        self.backgroundtransformed = pygame.transform.scale(self.background, (int(1280 * 0.5), int(720) - 200))
+        #self.background = pygame.image.load("res/spelbord.jpg")
+        #self.backgroundtransformed = pygame.transform.scale(self.background, (int(1280 * 0.5), int(720) - 200))
         self.buttonList = []
         self.labelList = []
         self.playerList = []
         self.actionList = []
+        self.board = 0
         self.font = pygame.font.SysFont('moonspace', 30)
 
-    def draw(self, whoseTurn, tempTurn, whoseTempTurn):
+        #
+        self.whoseTurn = 0
+        self.nrPlayers = 4
+
+        # Init special action
+        self.tempTurn = False
+        self.whoseTempTurn = 0
+
+
+
+    def draw(self, whoseTurn, tempTurn, whoseTempTurn, state):
         self.screen.fill((0, 0, 0))
-        self.screen.blit(self.backgroundtransformed, (1280 / 4, 100))
+        #self.screen.blit(self.backgroundtransformed, (1280 / 4, 100))
+
+        self.board.draw()
 
         for button in self.buttonList:
             button.draw()
         for label in self.labelList:
             label.draw()
         for player in self.playerList:
-            player.draw()
+            player.draw(state)
+        #self.checkOverlap(state)
         self.dice.draw()
         self.direction.draw()
         if tempTurn:
-            self.players_turn("Player " + str(self.playerList[whoseTempTurn].name) + " turn", (255, 255, 255))
+            self.players_turn("Player " + str(self.playerList[whoseTempTurn].name) + " has to move backwards! Roll the dice", (255, 255, 255))
         else:
             self.players_turn("Player "+str(self.playerList[whoseTurn].name)+" turn", (255, 255, 255))
+
+    def addBoard(self):
+        self.board = playBoard(self.screen)
 
     def addButton(self, text, posx, posy, width = 600, height = 100):
         self.buttonList.append(MenuButton(self.screen, text, posx, posy, width, height))
