@@ -46,6 +46,8 @@ class Game:
                 if event.type is pygame.KEYUP:
                     if event.key == pygame.K_0:
                         self.state.whoseTurn = (self.state.whoseTurn + 1) % self.state.nrPlayers
+                        if self.state.whoseTurn is 0:
+                            self.state.roundNr += 1
 
         # Exit when self.gameExit
         pygame.quit()
@@ -123,7 +125,7 @@ class Game:
 
     def passValues(self):
         if isinstance(self.state, playScreen):
-            return [self.state.whoseTurn, self.state.tempTurn, self.state.whoseTempTurn, self.state]
+            return [self.state.whoseTurn, self.state.tempTurn, self.state.whoseTempTurn, self.state, self.state.roundNr]
         else:
             return []
 
@@ -159,35 +161,40 @@ class Game:
         self.whoseTempTurn = state.playerList[state.whoseTempTurn]
 
         if state.dice:
+            self.whoseTurn.moving = True
+            self.whoseTurn.steps = 0
             self.diceNumber = randint(1, 6)
             state.dice.buttonText = str(self.diceNumber)
             if (state.tempTurn):
-                print(1)
+                #print(1)
                 self.whoseTempTurn.posY -= (1 * self.diceNumber)
             else:
                 if self.direction is 0:
                     # TEST IF YOU REACH NEW AREA::
                     if (self.whoseTurn.posY <= 11) and (self.whoseTurn.posY + self.diceNumber > 11):
                         if self.whoseTurn.posX is 0 or self.whoseTurn.posX is 1:
-                            self.whoseTurn.posX = 2
+                            self.whoseTurn.moveToPosX = 2
                             print("P1")
                         elif self.whoseTurn.posX is 6 or self.whoseTurn.posX is 7:
-                            self.whoseTurn.posX = 5
+                            self.whoseTurn.moveToPosX = 5
                             print("P4")
                         elif self.whoseTurn.posX is 2 or self.whoseTurn.posX is 3:
-                            self.whoseTurn.posX = 3
+                            self.whoseTurn.moveToPosY = 3
                             print("P2")
                         elif self.whoseTurn.posX is 4 or self.whoseTurn.posX is 5:
-                            self.whoseTurn.posX = 4
+                            self.whoseTurn.moveToPosX = 4
                             print("P3")
                         #self.screenList[3][0].playerList[state.whoseTurn].posX = int((self.screenList[3][0].playerList[state.whoseTurn].posX % 4) + 1)
-                    self.whoseTurn.posY += (1 * self.diceNumber)
+                    self.whoseTurn.moveToPosY += (1 * self.diceNumber)
                 if self.direction is 1:
-                    self.whoseTurn.posX += (1 * self.diceNumber)
+                    self.whoseTurn.moveToPosX += (1 * self.diceNumber)
                 if self.direction is 2:
-                    self.whoseTurn.posY -= (1 * self.diceNumber)
+                    self.whoseTurn.moveToPosY -= (1 * self.diceNumber)
                 if self.direction is 3:
-                    self.whoseTurn.posX -= (1 * self.diceNumber)
+                    self.whoseTurn.moveToPosX -= (1 * self.diceNumber)
+
+            self.whoseTurn.moveToPosXOnScreen = state.board.grid[self.whoseTurn.moveToPosX + self.whoseTurn.moveToPosY * 8].posX + 8
+            self.whoseTurn.moveToPosYOnScreen = state.board.grid[self.whoseTurn.moveToPosX + self.whoseTurn.moveToPosY * 8].posY + 2
 
 
 
@@ -208,8 +215,24 @@ class Player():
         self.screen = screen
         self.color = color
         self.name = name
-        self.posX = posx
+
+        ### MOVE TOWARDS POSITION
+        self.posX = posx #is the position of the player
         self.posY = posy
+
+        self.moving = False #Is True after dice is thrown, until new position is being reached
+        self.steps = 0
+        self.moveToPosX = self.posX
+        self.moveToPosY = self.posY
+
+        self.posXOnScreen = 0
+        self.posYOnScreen = 0
+        self.moveToPosXOnScreen = 0
+        self.moveToPosYOnScreen = 0
+
+        self.moveX = 0
+        self.moveY = 0
+
         self.sizeX = 50
         self.sizeY = 35
 
@@ -223,11 +246,28 @@ class Player():
         if self.posY >= 12 and (self.posX > 5 or self.posX < 2):
             self.posX = (self.posX+2) % 4 + 2
 
-
         if self.posX > 7 or self.posX < 0:
             self.posX = self.posX % 8 + 1
         if self.posY < 0:
             self.posY = 0
+
+    def move(self, state):
+        if self.moving:
+            self.steps += 1
+
+            print("Player " + str(state.playerList[state.whoseTurn].name) + " is moving")
+            if self.steps < 5:
+                self.moveX = (self.moveToPosXOnScreen-self.posXOnScreen)/100
+                self.moveY = (self.moveToPosYOnScreen-self.posYOnScreen)/100
+            self.posXOnScreen += self.moveX
+            self.posYOnScreen += self.moveY
+
+            if self.steps > 100:
+                self.moving = False
+                self.posX = self.moveToPosX
+                self.posY = self.moveToPosY
+                print("I'm no longer moving")
+
 
     def checkOverlap(self, state):
         state.tempTurn = False
@@ -241,22 +281,31 @@ class Player():
                 if (x1 is x2) and (y1 is y2):  # "Ouch! You hit me! "
                     state.tempTurn = True
                     state.whoseTempTurn = state.playerList.index(player)  # p0, p1, p3 or p4
-                    print("whoseTurn = "+str(state.whoseTurn))
-                    print("TempTurn = "+str(state.whoseTempTurn))
                     break
-                    # self.whoseTurn -= 1
-            #print(index)
-            #index += 1
+
+    def drawMoving(self, state):
+        pygame.draw.rect(self.screen, self.color, (self.posXOnScreen,
+                                                   self.posYOnScreen,
+                                                   self.sizeX, self.sizeY))
+
+    def drawStatic(self, state):
+        self.posXOnScreen = state.board.grid[self.posX + self.posY * 8].posX + 8
+        self.posYOnScreen = state.board.grid[self.posX + self.posY * 8].posY + 2
+
+        pygame.draw.rect(self.screen, self.color, (self.posXOnScreen,
+                                                   self.posYOnScreen,
+                                                   self.sizeX, self.sizeY))
 
     def draw(self, state): # State == screen
-        if state.whoseTurn is state.playerList.index(self):
+        if state.whoseTurn is state.playerList.index(self) and self.moving:
             self.moveAlongBoard()
+            self.move(state)
+            self.drawMoving(state)
+
             self.checkOverlap(state)
 
-        pygame.draw.rect(self.screen, self.color, (state.board.grid[self.posX + self.posY*8].posX +8,
-                                                   state.board.grid[self.posX + self.posY*8].posY +2,
-                                                   self.sizeX,self.sizeY))
-
+        else:
+            self.drawStatic(state)
 
 class box:
     def __init__(self, screen, boxPosX, boxPosY, boxSizeX, boxSizeY, x, y):
@@ -365,6 +414,7 @@ class playScreen:
 
         #
         self.whoseTurn = 0
+        self.roundNr = 1
         self.nrPlayers = 4
 
         # Init special action
@@ -373,7 +423,7 @@ class playScreen:
 
 
 
-    def draw(self, whoseTurn, tempTurn, whoseTempTurn, state):
+    def draw(self, whoseTurn, tempTurn, whoseTempTurn, state, roundNr):
         self.screen.fill((0, 0, 0))
         #self.screen.blit(self.backgroundtransformed, (1280 / 4, 100))
 
@@ -388,10 +438,12 @@ class playScreen:
         #self.checkOverlap(state)
         self.dice.draw()
         self.direction.draw()
+        self.round("Round "+str(self.roundNr), (255,255,255))
         if tempTurn:
             self.players_turn("Player " + str(self.playerList[whoseTempTurn].name) + " has to move backwards! Roll the dice", (255, 255, 255))
         else:
             self.players_turn("Player "+str(self.playerList[whoseTurn].name)+" turn", (255, 255, 255))
+
 
     def addBoard(self):
         self.board = playBoard(self.screen)
@@ -414,6 +466,11 @@ class playScreen:
     def players_turn(self, msg, color):
         screen_text = self.font.render(msg, True, color)
         self.screen.blit(screen_text, (10, 575))
+        pygame.display.update()
+
+    def round(self, msg, color):
+        screen_text = self.font.render(msg, True, color)
+        self.screen.blit(screen_text, (10, 545))
         pygame.display.update()
 
 class Menu:
