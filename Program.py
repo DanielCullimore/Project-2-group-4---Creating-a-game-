@@ -193,9 +193,6 @@ class Game:
                 if self.direction is 3:
                     self.whoseTurn.moveToPosX -= (1 * self.diceNumber)
 
-            self.whoseTurn.moveToPosXOnScreen = state.board.grid[self.whoseTurn.moveToPosX + self.whoseTurn.moveToPosY * 8].posX + 8
-            self.whoseTurn.moveToPosYOnScreen = state.board.grid[self.whoseTurn.moveToPosX + self.whoseTurn.moveToPosY * 8].posY + 2
-
 
 
     def directionFunction(self, state):
@@ -240,14 +237,28 @@ class Player():
         # Finish Line
         if self.posY >= 17:
             self.posY = 17
+            self.moveToPosY = 17
             print(self.name + " WON!")
+            print(self.name + " WON!")
+            print(self.name + " WON!")
+            print(self.name + " WON!")
+            print(self.name + " WON!")
+            print(self.name + " WON!")
+            print(self.name + " WON!")
+            print(self.name + " WON!")
+            print(self.name + " WON!")
+            print(self.name + " WON!")
+            print(self.name + " WON!")
+            #self.activeMainScreen += 1
 
         # Last 5 steps
         if self.posY >= 12 and (self.posX > 5 or self.posX < 2):
+            #self.posX = 0
             self.posX = (self.posX+2) % 4 + 2
 
         if self.posX > 7 or self.posX < 0:
-            self.posX = self.posX % 8 + 1
+            #self.posX = 0
+            self.posX = self.posX % 8
         if self.posY < 0:
             self.posY = 0
 
@@ -256,7 +267,9 @@ class Player():
             self.steps += 1
 
             print("Player " + str(state.playerList[state.whoseTurn].name) + " is moving")
-            if self.steps < 5:
+            if self.steps is 1:
+                self.moveToPosXOnScreen = state.board.grid[self.moveToPosX + self.moveToPosY * 8].posX + 8
+                self.moveToPosYOnScreen = state.board.grid[self.moveToPosX + self.moveToPosY * 8].posY + 2
                 self.moveX = (self.moveToPosXOnScreen-self.posXOnScreen)/100
                 self.moveY = (self.moveToPosYOnScreen-self.posYOnScreen)/100
             self.posXOnScreen += self.moveX
