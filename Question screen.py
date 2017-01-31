@@ -63,10 +63,14 @@ class Game:
         #
         # init main screen: Main Menu
         self.screenList.append([])  # Make room for new screen
-        self.screenList[0].append(Menu(self.screen))  # Insert mainScreen (class object in list.)
-        self.screenList[0][0].addButton("A", (self.width / 2) - 300, 100)  # Add buttons to the screen
-        self.screenList[0][0].addButton("B", (self.width / 2) - 300, 250)
-        self.screenList[0][0].addButton("C", (self.width / 2) - 300, 400)
+        self.screenList[0].append(Menu(self.screen))  # Insert mainScreen#  (class object in list.)
+        self.screenList[0][0].addLabel("Question: ", (self.width / 2) - 625, 25)
+        self.screenList[0][0].addButton("A", (self.width / 2) - 625, 250)  # Add buttons to the screen
+        self.screenList[0][0].addLabel("Answer A: ", (self.width / 2) - 325, 275)
+        self.screenList[0][0].addButton("B", (self.width / 2) - 625, 350)
+        self.screenList[0][0].addLabel("Answer B: ", (self.width / 2) - 325, 375)
+        self.screenList[0][0].addButton("C", (self.width / 2) - 625, 450)
+        self.screenList[0][0].addLabel("Answer C: ", (self.width / 2) - 325, 475)
 
         # Init set screen to be active on default
         self.activeMainScreen = 0
@@ -134,7 +138,7 @@ class Menu:
         for label in self.labelList:
             label.draw()
 
-    def addButton(self, text, posx, posy, width = 600, height = 100):
+    def addButton(self, text, posx, posy, width = 275, height = 75):
         self.buttonList.append(MenuButton(self.screen, text, posx, posy, width, height))
 
     def addLabel(self, text, posx, posy, size = 50, color = (200, 200, 200)):
