@@ -21,6 +21,9 @@ class Game:
         # Init screens
         self.initScreens()
 
+        #
+        self.nrPlayers = 4
+
 
     def run(self):
         while not self.gameExit:
@@ -91,7 +94,8 @@ class Game:
         self.screenList.append([])  # Make room for new screen
         self.screenList[2].append(Menu(self.screen))
         self.screenList[2][0].addButton("Play", (self.width / 2) - 300, 100)
-        self.screenList[2][0].addLabel("Players = 4", (self.width / 2) - 600, 300)
+        self.screenList[2][0].addLabel("Players = ", (self.width / 2) - 600, 300)
+        self.screenList[2][0].addPlayerButton("4", (self.width/2) -350, 280)
         self.screenList[2][0].addButton("Back", 340, 450)
 
         # Init main screen: Actual playing board
@@ -125,13 +129,13 @@ class Game:
 
     def passValues(self):
         if isinstance(self.state, playScreen):
-            return [self.state.whoseTurn, self.state.tempTurn, self.state.whoseTempTurn, self.state, self.state.roundNr]
+            return [self.state.whoseTurn, self.state.tempTurn, self.state.whoseTempTurn, self.state, self.state.roundNr, self.activeMainScreen]
         else:
             return []
 
     def buttonFunctions(self):
         # Defining the action of button nr.1
-        if (len(self.state.buttonList)) > 0:        # if more than 0 button
+        if (len(self.state.buttonList)) > 0:        # if more than 0 button (prevent list index out of range)
             if self.state.buttonList[0]:            #   if button is pressed
                 if self.activeSubScreen > 0:        #       if a subscreen
                     self.activeSubScreen = 0        #           go back to its main screen
@@ -156,19 +160,30 @@ class Game:
                 if self.state.buttonList[i]:
                     self.activeSubScreen = i
 
+        ###Action button
+        if len(self.state.actionList) > 0:
+            if self.state.actionList[0]:
+                self.nrPlayers = (self.nrPlayers % 4) +1
+                self.state.actionList[0].buttonText = str(self.nrPlayers)
+
     def dice(self, state):
         self.whoseTurn = state.playerList[state.whoseTurn]
         self.whoseTempTurn = state.playerList[state.whoseTempTurn]
 
         if state.dice:
-            self.whoseTurn.moving = True
-            self.whoseTurn.steps = 0
+
             self.diceNumber = randint(1, 6)
             state.dice.buttonText = str(self.diceNumber)
             if (state.tempTurn):
+                self.whoseTempTurn.moving = True
+                self.whoseTempTurn.steps = 0
                 #print(1)
-                self.whoseTempTurn.posY -= (1 * self.diceNumber)
+                self.whoseTempTurn.moveToPosY -= (1 * self.diceNumber)
+                if self.whoseTempTurn.moveToPosY <= 0:
+                    self.whoseTempTurn.moveToPosY = 0
             else:
+                self.whoseTurn.moving = True
+                self.whoseTurn.steps = 0
                 if self.direction is 0:
                     # TEST IF YOU REACH NEW AREA::
                     if (self.whoseTurn.posY <= 11) and (self.whoseTurn.posY + self.diceNumber > 11):
@@ -193,7 +208,11 @@ class Game:
                 if self.direction is 3:
                     self.whoseTurn.moveToPosX -= (1 * self.diceNumber)
 
+            self.whoseTurn.moveAlongBoard(state)
 
+            if self.whoseTurn.moveToPosY >= 17:
+                print("WE HAVE A WINNER!")
+                ## self.activemainscreen += 1
 
     def directionFunction(self, state):
         if state.direction:
@@ -233,10 +252,10 @@ class Player():
         self.sizeX = 50
         self.sizeY = 35
 
-    def moveAlongBoard(self):
+    def moveAlongBoard(self, state):
+        print("Moving along board..........")
         # Finish Line
-        if self.posY >= 17:
-            self.posY = 17
+        if self.moveToPosY >= 17:
             self.moveToPosY = 17
             print(self.name + " WON!")
             print(self.name + " WON!")
@@ -249,18 +268,16 @@ class Player():
             print(self.name + " WON!")
             print(self.name + " WON!")
             print(self.name + " WON!")
-            #self.activeMainScreen += 1
+
 
         # Last 5 steps
-        if self.posY >= 12 and (self.posX > 5 or self.posX < 2):
-            #self.posX = 0
-            self.posX = (self.posX+2) % 4 + 2
+        if self.moveToPosY >= 12 and (self.moveToPosX > 5 or self.moveToPosX < 2):
+            self.moveToPosX = (self.moveToPosX+2) % 4 + 2
 
-        if self.posX > 7 or self.posX < 0:
-            #self.posX = 0
-            self.posX = self.posX % 8
-        if self.posY < 0:
-            self.posY = 0
+        if self.moveToPosX > 7 or self.moveToPosX < 0:
+            self.moveToPosX = (self.moveToPosX) % 8
+        if self.moveToPosY < 0:
+            self.moveToPosY = 0
 
     def move(self, state):
         if self.moving:
@@ -280,6 +297,7 @@ class Player():
                 self.posX = self.moveToPosX
                 self.posY = self.moveToPosY
                 print("I'm no longer moving")
+                self.checkOverlap(state)
 
 
     def checkOverlap(self, state):
@@ -310,13 +328,9 @@ class Player():
                                                    self.sizeX, self.sizeY))
 
     def draw(self, state): # State == screen
-        if state.whoseTurn is state.playerList.index(self) and self.moving:
-            self.moveAlongBoard()
+        if (state.whoseTurn is state.playerList.index(self) or state.whoseTempTurn is state.playerList.index(self)) and self.moving:
             self.move(state)
             self.drawMoving(state)
-
-            self.checkOverlap(state)
-
         else:
             self.drawStatic(state)
 
@@ -436,7 +450,7 @@ class playScreen:
 
 
 
-    def draw(self, whoseTurn, tempTurn, whoseTempTurn, state, roundNr):
+    def draw(self, whoseTurn, tempTurn, whoseTempTurn, state, roundNr, activeMainScreen):
         self.screen.fill((0, 0, 0))
         #self.screen.blit(self.backgroundtransformed, (1280 / 4, 100))
 
@@ -492,6 +506,7 @@ class Menu:
         self.background = (24, 147, 60)
         self.buttonList = []
         self.labelList = []
+        self.actionList = []
 
     def draw(self):
         self.screen.fill(self.background)
@@ -499,12 +514,17 @@ class Menu:
             button.draw()
         for label in self.labelList:
             label.draw()
+        for action in self.actionList:
+            action.draw()
 
     def addButton(self, text, posx, posy, width = 600, height = 100):
         self.buttonList.append(MenuButton(self.screen, text, posx, posy, width, height))
 
     def addLabel(self, text, posx, posy, size = 50, color = (200, 200, 200)):
         self.labelList.append(Label(self.screen, text, posx, posy, size, color))
+
+    def addPlayerButton(self, text, posx, posy, width = 100, height = 100):
+        self.actionList.append(MenuButton(self.screen, text, posx, posy, width, height))
 
 
 class MenuButton:
@@ -591,6 +611,7 @@ class Label:
         self.labelObject = self.renderer.render(self.text, True, self.color)
 
     def draw(self):
+        self.labelObject = self.renderer.render(self.text, True, self.color)
         """draw Label object if position is set"""
         if not (self.posx is None or self.posy is None):
             self.screen.blit(self.labelObject, (self.posx, self.posy))
