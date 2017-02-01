@@ -34,7 +34,11 @@ def upload_score(name, score):
 
     interact_with_database("INSERT INTO score values('"+varname+"',"+varscore+")")
 
-# Downloads score data from database
+# Remove all scores (reset)
+def clean_score():
+    interact_with_database("DELETE FROM score")
+
+# Download score from database
 def download_scores():
     return interact_with_database("SELECT * FROM score")
 
