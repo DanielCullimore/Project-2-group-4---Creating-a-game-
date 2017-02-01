@@ -65,7 +65,10 @@ class Game:
         self.height = pygame.display.get_surface().get_height()
 
     def initDict(self):
-        self.dict = {'main_m': Menu(self.p), 'play_m': Menu(self.p), 'sp_m': Menu(self.p), 'options_m': Menu(self.p)}
+        self.dict = {'main_m': Menu(self.p),
+                     'play_m': Menu(self.p),
+                     'sp_m': Menu(self.p),
+                     'options_m': Menu(self.p)}
         self.dict['main_m'].addButton("Play", int(self.width/3.75), int(self.height/10*1))
         self.dict['main_m'].addButton("Options", int(self.width/3.75), int(self.height/10*3))
         self.dict['main_m'].addButton("Rules", int(self.width/3.75), int(self.height/10*5))
@@ -418,7 +421,7 @@ class SinglePlayer:
                     self.dict.clear()
                     self.p.set("doublebuffering", "True")
                     self.set_screen()
-                    self.initPause()
+                    self.initScreens()
                     self.dict["options_m"].checkboxList[1].isChecked = True
             elif self.dict["options_m"].checkboxList[2] and not self.dict["options_m"].checkboxList[0].isChecked:
                 if self.dict["options_m"].checkboxList[2].isChecked:
@@ -469,7 +472,6 @@ class SinglePlayer:
         self.dict['options_m'].addLabel("Resizable: ", int(self.width/10*4), int(self.height/10*3), size=int(self.height/36))
         self.dict['options_m'].addCheckbox("resizable", int(self.width/10*6), int(self.height/10*3))
         self.dict['options_m'].addButton("Back", int(self.width/3.75), int(self.height/10*7))
-
 
     def draw(self):
         self.screen.fill((0, 0, 0))
