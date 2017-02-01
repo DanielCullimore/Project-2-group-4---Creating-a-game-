@@ -37,8 +37,12 @@ class Game:
                         if self.dict[key] is self.state:
                             temp = key
                     self.dict.clear()
-                    self.p.set("width", str(event.w))
-                    self.p.set("height", str(event.h))
+                    if event.h < 480 or event.w < 640:
+                        self.p.set("width", "1024")
+                        self.p.set("height", "768")
+                    else:
+                        self.p.set("width", str(event.w))
+                        self.p.set("height", str(event.h))
                     self.set_screen()
                     self.initDict()
                     self.state = self.dict[temp]
@@ -329,6 +333,7 @@ class Label:
 
 
 class SinglePlayer:
+
     def __init__(self, p, fps, playerAmount):
         self.width = pygame.display.get_surface().get_size()[0]
         self.height = pygame.display.get_surface().get_size()[1]
@@ -343,7 +348,7 @@ class SinglePlayer:
         self.players = [Player(self.screen, "res/red_player.png", (300, 600)),Player(self.screen, "res/yellow_player.png", (600, 600))]
         self.players[0].isLocked = True
         self.state = "self"
-        self.initPause()
+        self.initScreens()
 
     def run(self):
         while not self.gameReturn:
@@ -372,10 +377,14 @@ class SinglePlayer:
 
                 if event.type is pygame.VIDEORESIZE:
                     self.dict.clear()
-                    self.p.set("width", str(event.w))
-                    self.p.set("height", str(event.h))
+                    if event.h < 480 or event.w < 640:
+                        self.p.set("width", "1024")
+                        self.p.set("height", "768")
+                    else:
+                        self.p.set("width", str(event.w))
+                        self.p.set("height", str(event.h))
                     self.set_screen()
-                    self.initPause()
+                    self.initScreens()
 
     def button_functions(self):
         if self.state is "options_m":
@@ -388,7 +397,7 @@ class SinglePlayer:
                     self.p.set("width", "1280")
                     self.p.set("height", "720")
                     self.set_screen()
-                    self.initPause()
+                    self.initScreens()
                     self.dict["options_m"].checkboxList[0].isChecked = False
                 else:
                     self.dict.clear()
@@ -396,14 +405,14 @@ class SinglePlayer:
                     self.p.set("width", "1920")
                     self.p.set("height", "1080")
                     self.set_screen()
-                    self.initPause()
+                    self.initScreens()
                     self.dict["options_m"].checkboxList[0].isChecked = True
             elif self.dict["options_m"].checkboxList[1]:
                 if self.dict["options_m"].checkboxList[1].isChecked:
                     self.dict.clear()
                     self.p.set("doublebuffering", "False")
                     self.set_screen()
-                    self.initPause()
+                    self.initScreens()
                     self.dict["options_m"].checkboxList[1].isChecked = False
                 else:
                     self.dict.clear()
@@ -416,13 +425,13 @@ class SinglePlayer:
                     self.dict.clear()
                     self.p.set("resizable", "False")
                     self.set_screen()
-                    self.initPause()
+                    self.initScreens()
                     self.dict["options_m"].checkboxList[2].isChecked = False
                 else:
                     self.dict.clear()
                     self.p.set("resizable", "True")
                     self.set_screen()
-                    self.initPause()
+                    self.initScreens()
                     self.dict["options_m"].checkboxList[2].isChecked = True
         elif self.state is "pause_m":
             if self.dict["pause_m"].buttonList[0]:
@@ -446,7 +455,8 @@ class SinglePlayer:
         self.width = pygame.display.get_surface().get_width()
         self.height = pygame.display.get_surface().get_height()
 
-    def initPause(self):
+    def initScreens(self):
+        self.backgroundtransformed = pygame.transform.scale(self.background, (int(self.width * 0.5), int(self.height) - 200))
         self.dict = {"pause_m": Menu(self.p), "options_m": Menu(self.p)}
         width, height = self.screen.get_size()
         self.dict['pause_m'].addButton("Resume", int(width/3.75), int(height/10*1))
@@ -464,16 +474,16 @@ class SinglePlayer:
     def draw(self):
         self.screen.fill((0, 0, 0))
         self.screen.blit(self.backgroundtransformed, (self.width/4, 100))
-        pygame.draw.rect(self.screen,(200,200,200),pygame.Rect(0, self.height-80, self.width, self.height))
-        pygame.draw.rect(self.screen, (150, 150, 150), pygame.Rect(0, self.height - 20, self.width, self.height))
-        pygame.draw.rect(self.screen, (255, 255, 0), (int(self.width / 64 * 17), self.height-80, 40, 60))
-        pygame.draw.rect(self.screen, (255, 255, 0), (int(self.width / 64 * 21), self.height - 80, 40, 60))
-        pygame.draw.rect(self.screen, (0, 0, 255), (int(self.width / 64 * 25), self.height - 80, 40, 60))
-        pygame.draw.rect(self.screen, (0, 0, 255), (int(self.width / 64 * 29), self.height - 80, 40, 60))
-        pygame.draw.rect(self.screen, (255, 0, 0), (int(self.width / 64 * 33), self.height - 80, 40, 60))
-        pygame.draw.rect(self.screen, (255, 0, 0), (int(self.width / 64 * 37), self.height - 80, 40, 60))
-        pygame.draw.rect(self.screen, (0, 255, 0), (int(self.width / 64 * 41), self.height - 80, 40, 60))
-        pygame.draw.rect(self.screen, (0, 255, 0), (int(self.width / 64 * 45), self.height - 80, 40, 60))
+        pygame.draw.rect(self.screen,(200,200,200),pygame.Rect(0, self.height-self.height/9, self.width, self.height))
+        pygame.draw.rect(self.screen, (150, 150, 150), pygame.Rect(0, self.height-self.height/32, self.width, self.height))
+        pygame.draw.rect(self.screen, (255, 255, 0), (int(self.width / 64 * 17), int(self.height-self.height/9), int(self.width/30), int(self.height/13)))
+        pygame.draw.rect(self.screen, (255, 255, 0), (int(self.width / 64 * 21), int(self.height-self.height/9), int(self.width/30), int(self.height/13)))
+        pygame.draw.rect(self.screen, (0, 0, 255), (int(self.width / 64 * 25), int(self.height-self.height/9), int(self.width/30), int(self.height/13)))
+        pygame.draw.rect(self.screen, (0, 0, 255), (int(self.width / 64 * 29), int(self.height-self.height/9), int(self.width/30), int(self.height/13)))
+        pygame.draw.rect(self.screen, (255, 0, 0), (int(self.width / 64 * 33), int(self.height-self.height/9), int(self.width/30), int(self.height/13)))
+        pygame.draw.rect(self.screen, (255, 0, 0), (int(self.width / 64 * 37), int(self.height-self.height/9), int(self.width/30), int(self.height/13)))
+        pygame.draw.rect(self.screen, (0, 255, 0), (int(self.width / 64 * 41), int(self.height-self.height/9), int(self.width/30), int(self.height/13)))
+        pygame.draw.rect(self.screen, (0, 255, 0), (int(self.width / 64 * 45), int(self.height-self.height/9), int(self.width/30), int(self.height/13)))
         self.players.sort(key=lambda x: x.playerPosY)
         for player in self.players:
             player.update()
