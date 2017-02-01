@@ -21,7 +21,7 @@ class Game:
         while not self.gameExit:
             for key in self.dict:
                 if self.dict[key] is self.state:
-                    self.state.draw()
+                    self.dict[key].draw()
 
             pygame.display.flip()
 
@@ -31,12 +31,23 @@ class Game:
                 if event.type == pygame.QUIT:
                     self.gameExit = True
                 if event.type is pygame.MOUSEBUTTONUP or event.type is pygame.KEYUP:
-                    self.buttonFunction(event)
+                    self.button_functions(event)
+                if event.type is pygame.VIDEORESIZE:
+                    for key in self.dict:
+                        if self.dict[key] is self.state:
+                            temp = key
+                    self.dict.clear()
+                    self.p.set("width", str(event.w))
+                    self.p.set("height", str(event.h))
+                    self.set_screen()
+                    self.initDict()
+                    self.state = self.dict[temp]
+
         pygame.quit()
         sys.exit()
 
     def set_screen(self):
-        flags = pygame.HWSURFACE
+        flags = 0x0
         width = self.p.get("width", "int")
         height = self.p.get("height", "int")
         if self.p.get("doublebuffering", "bool"):
@@ -51,33 +62,34 @@ class Game:
 
     def initDict(self):
         self.dict = {'main_m': Menu(self.p), 'play_m': Menu(self.p), 'sp_m': Menu(self.p), 'options_m': Menu(self.p)}
-        self.dict['main_m'].addButton("Play", int(self.width/4), int(self.height/10*1))
-        self.dict['main_m'].addButton("Options", int(self.width/4), int(self.height/10*3))
-        self.dict['main_m'].addButton("Rules", int(self.width/4), int(self.height/10*5))
-        self.dict['main_m'].addButton("Exit", int(self.width/4), self.height/10*7)
-        self.dict['play_m'].addButton("Single Player", int(self.width/4), int(self.height/10*1))
-        self.dict['play_m'].addButton("Back", int(self.width/4), int(self.height/10*3))
-        self.dict['sp_m'].addLabel("Opponents: ", int(self.width/20*1), int(self.height/40*5))
-        self.dict['sp_m'].addButton(" 2 ", int(self.width/20*7), int(self.height/10*1), int(self.width/12.8), int(self.height/7.2))
-        self.dict['sp_m'].addButton(" 3 ", int(self.width/20*9), int(self.height/10*1), int(self.width/12.8), int(self.height/7.2))
-        self.dict['sp_m'].addButton(" 4 ", int(self.width/20*11), int(self.height/10*1), int(self.width/12.8), int(self.height/7.2))
-        self.dict['sp_m'].addButton("Back", int(self.width/4), int(self.height/10*3))
+        self.dict['main_m'].addButton("Play", int(self.width/3.75), int(self.height/10*1))
+        self.dict['main_m'].addButton("Options", int(self.width/3.75), int(self.height/10*3))
+        self.dict['main_m'].addButton("Rules", int(self.width/3.75), int(self.height/10*5))
+        self.dict['main_m'].addButton("Exit", int(self.width/3.75), self.height/10*7)
+        self.dict['play_m'].addButton("Single Player", int(self.width/3.75), int(self.height/10*1))
+        self.dict['play_m'].addButton("Back", int(self.width/3.75), int(self.height/10*3))
+        self.dict['sp_m'].addLabel("Opponents: ", int(self.width/40*1), int(self.height/40*5))
+        self.dict['sp_m'].addButton(" 2 ", int(self.width/40*15), int(self.height/10*1), int(self.width/12.8), int(self.height/7.2))
+        self.dict['sp_m'].addButton(" 3 ", int(self.width/40*19), int(self.height/10*1), int(self.width/12.8), int(self.height/7.2))
+        self.dict['sp_m'].addButton(" 4 ", int(self.width/40*23), int(self.height/10*1), int(self.width/12.8), int(self.height/7.2))
+        self.dict['sp_m'].addButton("Back", int(self.width/3.75), int(self.height/10*3))
         self.dict['options_m'].addLabel("Fullscreen: ", int(self.width/10*4), int(self.height/10*1), size=int(self.height/36))
         self.dict['options_m'].addCheckbox("fullscreen", int(self.width/10*6), int(self.height/10*1))
-        self.dict['options_m'].addButton("Back", int(self.width/4), int(self.height/10*7))
+        self.dict['options_m'].addLabel("DoubleBuffering: ", int(self.width/10*4), int(self.height/10*2), size=int(self.height/36))
+        self.dict['options_m'].addCheckbox("doublebuffering", int(self.width/10*6), int(self.height/10*2))
+        self.dict['options_m'].addLabel("Resizable: ", int(self.width/10*4), int(self.height/10*3), size=int(self.height/36))
+        self.dict['options_m'].addCheckbox("resizable", int(self.width/10*6), int(self.height/10*3))
+        self.dict['options_m'].addButton("Back", int(self.width/3.75), int(self.height/10*7))
 
-    def buttonFunction(self, event):
+
+    def button_functions(self, event):
         if self.state is self.dict['main_m']:
-            if event.type is pygame.KEYUP:
-                if event.key is pygame.K_ESCAPE:
-                    self.gameExit = True
-            else:
-                if self.state.buttonList[3]:
-                    self.gameExit = True
-                elif self.state.buttonList[0]:
-                    self.state = self.dict['play_m']
-                elif self.state.buttonList[1]:
-                    self.state = self.dict['options_m']
+            if self.state.buttonList[3]:
+                self.gameExit = True
+            elif self.state.buttonList[0]:
+                self.state = self.dict['play_m']
+            elif self.state.buttonList[1]:
+                self.state = self.dict['options_m']
         elif self.state is self.dict['play_m']:
             if self.state.buttonList[1]:
                 self.state = self.dict['main_m']
@@ -86,35 +98,76 @@ class Game:
         elif self.state is self.dict['sp_m']:
             if self.state.buttonList[0]:
                 SinglePlayer(self.p, self.fps, 2).run()
+                self.dict.clear()
                 self.set_screen()
+                self.initDict()
+                self.state = self.dict["main_m"]
             elif self.state.buttonList[1]:
                 SinglePlayer(self.p, self.fps, 3).run()
+                self.dict.clear()
                 self.set_screen()
+                self.initDict()
+                self.state = self.dict["main_m"]
             elif self.state.buttonList[2]:
                 SinglePlayer(self.p, self.fps, 4).run()
+                self.dict.clear()
                 self.set_screen()
+                self.initDict()
+                self.state = self.dict["main_m"]
             elif self.state.buttonList[3]:
                 self.state = self.dict['play_m']
         elif self.state is self.dict['options_m']:
             if self.state.buttonList[0]:
                 self.state = self.dict['main_m']
-            elif self.state.checkboxList[0]:
+            elif self.state.checkboxList[0] and not self.state.checkboxList[2].isChecked:
                 if self.state.checkboxList[0].isChecked:
+                    self.dict.clear()
                     self.p.set("fullscreen", "False")
                     self.p.set("width", "1280")
                     self.p.set("height", "720")
-                    for key in self.dict:
-                        self.dict[key].update()
+                    self.set_screen()
+                    self.initDict()
+                    self.state = self.dict['options_m']
                     self.state.checkboxList[0].isChecked = False
                 else:
-                    modes = pygame.display.list_modes()
+                    self.dict.clear()
                     self.p.set("fullscreen", "True")
-                    self.p.set("width", str(modes[0][0]))
-                    self.p.set("height", str(modes[0][1]))
+                    self.p.set("width", "1920")
+                    self.p.set("height", "1080")
                     self.set_screen()
-                    for key in self.dict:
-                        self.dict[key].update()
+                    self.initDict()
+                    self.state = self.dict['options_m']
                     self.state.checkboxList[0].isChecked = True
+            elif self.state.checkboxList[1]:
+                if self.state.checkboxList[1].isChecked:
+                    self.dict.clear()
+                    self.p.set("doublebuffering", "False")
+                    self.set_screen()
+                    self.initDict()
+                    self.state = self.dict['options_m']
+                    self.state.checkboxList[1].isChecked = False
+                else:
+                    self.dict.clear()
+                    self.p.set("doublebuffering", "True")
+                    self.set_screen()
+                    self.initDict()
+                    self.state = self.dict['options_m']
+                    self.state.checkboxList[1].isChecked = True
+            elif self.state.checkboxList[2] and not self.state.checkboxList[0].isChecked:
+                if self.state.checkboxList[2].isChecked:
+                    self.dict.clear()
+                    self.p.set("resizable", "False")
+                    self.set_screen()
+                    self.initDict()
+                    self.state = self.dict['options_m']
+                    self.state.checkboxList[2].isChecked = False
+                else:
+                    self.dict.clear()
+                    self.p.set("resizable", "True")
+                    self.set_screen()
+                    self.initDict()
+                    self.state = self.dict['options_m']
+                    self.state.checkboxList[2].isChecked = True
 
 
 class Menu:
@@ -135,15 +188,6 @@ class Menu:
             label.draw()
         for checkbox in self.checkboxList:
             checkbox.draw()
-
-    def update(self):
-        self.set_screen()
-        for button in self.buttonList:
-            button.screen = self.screen
-        for label in self.labelList:
-            label.screen = self.screen
-        for checkbox in self.checkboxList:
-            checkbox.screen = self.screen
 
     def set_screen(self):
         flags = 0x0
@@ -298,17 +342,17 @@ class SinglePlayer:
         self.fps = fps
         self.players = [Player(self.screen, "res/red_player.png", (300, 600)),Player(self.screen, "res/yellow_player.png", (600, 600))]
         self.players[0].isLocked = True
-        self.whoseTurn = self.players[0]
-        self.pauseFlag = False
+        self.state = "self"
         self.initPause()
 
     def run(self):
         while not self.gameReturn:
-            if self.pauseFlag:
-                self.pause.draw()
-            else:
+            if self.state is "self":
                 self.draw()
-            print(int(self.clock.get_fps()))
+            elif self.state is "pause_m":
+                self.dict['pause_m'].draw()
+            elif self.state is "options_m":
+                self.dict['options_m'].draw()
 
             pygame.display.flip()
             self.clock.tick(self.fps)
@@ -319,15 +363,74 @@ class SinglePlayer:
                     sys.exit()
                 if event.type is pygame.KEYUP:
                     if event.key is pygame.K_ESCAPE:
-                        if self.pauseFlag:
-                            self.pauseFlag = False
-                        else:
-                            self.pauseFlag = True
-                if event.type is pygame.MOUSEBUTTONUP and self.pauseFlag:
-                    if self.pause.buttonList[0]:
-                        self.pauseFlag = False
-                    else:
-                        self.gameReturn = True
+                        if self.state is "self":
+                            self.state = "pause_m"
+                        elif self.state is "pause_m":
+                            self.state = "self"
+                if event.type is pygame.MOUSEBUTTONUP and (self.state is "pause_m" or "options_m"):
+                    self.button_functions()
+
+                if event.type is pygame.VIDEORESIZE:
+                    self.dict.clear()
+                    self.p.set("width", str(event.w))
+                    self.p.set("height", str(event.h))
+                    self.set_screen()
+                    self.initPause()
+
+    def button_functions(self):
+        if self.state is "options_m":
+            if self.dict["options_m"].buttonList[0]:
+                self.state = "pause_m"
+            elif self.dict["options_m"].checkboxList[0] and not self.dict["options_m"].checkboxList[2].isChecked:
+                if self.dict["options_m"].checkboxList[0].isChecked:
+                    self.dict.clear()
+                    self.p.set("fullscreen", "False")
+                    self.p.set("width", "1280")
+                    self.p.set("height", "720")
+                    self.set_screen()
+                    self.initPause()
+                    self.dict["options_m"].checkboxList[0].isChecked = False
+                else:
+                    self.dict.clear()
+                    self.p.set("fullscreen", "True")
+                    self.p.set("width", "1920")
+                    self.p.set("height", "1080")
+                    self.set_screen()
+                    self.initPause()
+                    self.dict["options_m"].checkboxList[0].isChecked = True
+            elif self.dict["options_m"].checkboxList[1]:
+                if self.dict["options_m"].checkboxList[1].isChecked:
+                    self.dict.clear()
+                    self.p.set("doublebuffering", "False")
+                    self.set_screen()
+                    self.initPause()
+                    self.dict["options_m"].checkboxList[1].isChecked = False
+                else:
+                    self.dict.clear()
+                    self.p.set("doublebuffering", "True")
+                    self.set_screen()
+                    self.initPause()
+                    self.dict["options_m"].checkboxList[1].isChecked = True
+            elif self.dict["options_m"].checkboxList[2] and not self.dict["options_m"].checkboxList[0].isChecked:
+                if self.dict["options_m"].checkboxList[2].isChecked:
+                    self.dict.clear()
+                    self.p.set("resizable", "False")
+                    self.set_screen()
+                    self.initPause()
+                    self.dict["options_m"].checkboxList[2].isChecked = False
+                else:
+                    self.dict.clear()
+                    self.p.set("resizable", "True")
+                    self.set_screen()
+                    self.initPause()
+                    self.dict["options_m"].checkboxList[2].isChecked = True
+        elif self.state is "pause_m":
+            if self.dict["pause_m"].buttonList[0]:
+                self.state = "self"
+            elif self.dict["pause_m"].buttonList[1]:
+                self.state = "options_m"
+            elif self.dict["pause_m"].buttonList[2]:
+                self.gameReturn = True
 
     def set_screen(self):
         flags = pygame.HWSURFACE
@@ -344,10 +447,19 @@ class SinglePlayer:
         self.height = pygame.display.get_surface().get_height()
 
     def initPause(self):
-        self.pause = Menu(self.p)
+        self.dict = {"pause_m": Menu(self.p), "options_m": Menu(self.p)}
         width, height = self.screen.get_size()
-        self.pause.addButton("Resume", int(width/4), int(height/10*1))
-        self.pause.addButton("Exit", int(width/4), int(height/10*3))
+        self.dict['pause_m'].addButton("Resume", int(width/3.75), int(height/10*1))
+        self.dict['pause_m'].addButton("Options", int(width/3.75), int(height/10*3))
+        self.dict['pause_m'].addButton("Exit", int(width/3.75), int(height/10*5))
+        self.dict['options_m'].addLabel("Fullscreen: ", int(self.width/10*4), int(self.height/10*1), size=int(self.height/36))
+        self.dict['options_m'].addCheckbox("fullscreen", int(self.width/10*6), int(self.height/10*1))
+        self.dict['options_m'].addLabel("DoubleBuffering: ", int(self.width/10*4), int(self.height/10*2), size=int(self.height/36))
+        self.dict['options_m'].addCheckbox("doublebuffering", int(self.width/10*6), int(self.height/10*2))
+        self.dict['options_m'].addLabel("Resizable: ", int(self.width/10*4), int(self.height/10*3), size=int(self.height/36))
+        self.dict['options_m'].addCheckbox("resizable", int(self.width/10*6), int(self.height/10*3))
+        self.dict['options_m'].addButton("Back", int(self.width/3.75), int(self.height/10*7))
+
 
     def draw(self):
         self.screen.fill((0, 0, 0))
