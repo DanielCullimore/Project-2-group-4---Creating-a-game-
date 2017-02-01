@@ -2,7 +2,7 @@ import pygame
 import sys
 from random import *
 import math
-
+import configparser
 
 class Game:
 
@@ -10,6 +10,10 @@ class Game:
         # Init pygame
         pygame.init()
         pygame.font.init()
+
+        self.p = Properties()
+        self.set_screen()
+
         self.set_screen()
         self.fps = 60
         self.gameExit = False
@@ -20,9 +24,11 @@ class Game:
 
         # Init screens
         self.initScreens()
+        self.state = self.screenList[0][0]
 
         #
         self.nrPlayers = 4
+        self.completed = False
 
 
     def run(self):
@@ -37,7 +43,32 @@ class Game:
 
             # Update pygame screen
             self.clock.tick(self.fps)
+            pygame.display.set_caption("Project 2 - FPS: " + str(int(self.clock.get_fps())))
+
+            if self.completed:
+                self.activeMainScreen = -1
+                print("OVER!!!!!!!!!!!!!!!!!!!")
+
             for event in pygame.event.get():
+                if event.type is pygame.VIDEORESIZE:
+                    tempMain = self.activeMainScreen
+                    tempSub = self.activeSubScreen
+                    self.screenList.clear()
+                    # if event.h < 480 or event.w < 640:
+                    #     self.p.set("width", "1024")
+                    #     self.p.set("height", "768")
+                    # else:
+                    self.p.set("width", str(event.w))
+                    self.p.set("height", str(event.h))
+
+                    self.set_screen()
+                    self.initScreens()
+
+                    self.activeMainScreen = tempMain
+                    self.activeSubscreen = tempSub
+                    self.state = self.screenList[tempMain][tempSub]
+
+
                 if event.type == pygame.QUIT:
                     self.gameExit = True
                 if event.type is pygame.MOUSEBUTTONUP:
@@ -52,16 +83,34 @@ class Game:
                         if self.state.whoseTurn is 0:
                             self.state.roundNr += 1
 
+
+
+
+
         # Exit when self.gameExit
         pygame.quit()
         sys.exit()
 
+    def set_screen(self):
+        flags = pygame.HWSURFACE
+        width = self.p.get("width", "int")
+        height = self.p.get("height", "int")
+        if self.p.get("doublebuffering", "bool"):
+            flags |= pygame.DOUBLEBUF
+        if self.p.get("fullscreen", "bool"):
+            flags |= pygame.FULLSCREEN
+        if self.p.get("resizable", "bool"):
+            flags |= pygame.RESIZABLE
+        self.screen = pygame.display.set_mode((width, height), flags)
+        self.width = pygame.display.get_surface().get_width()
+        self.height = pygame.display.get_surface().get_height()
+
     # Methods
-    def set_screen(self, width = 1280, height = 720):
-        self.width = width
-        self.height = height
-        resolution = (width, height)
-        self.screen = pygame.display.set_mode(resolution)
+    # def set_screen(self, width = 1280, height = 720):
+    #     self.width = width
+    #     self.height = height
+    #     resolution = (width, height)
+    #     self.screen = pygame.display.set_mode(resolution)
 
     def initScreens(self):
         # Screens are in a grid
@@ -72,38 +121,47 @@ class Game:
         # etc.. So you can say screen = screen[currentScreen+1][0]
         # init main screen: Main Menu
         self.screenList.append([])  # Make room for new screen
-        self.screenList[0].append(Menu(self.screen))  # Insert mainScreen (class object in list.)
-        self.screenList[0][0].addButton("Play", (self.width / 2) - 300, 100)  # Add buttons to the screen
-        self.screenList[0][0].addButton("Options", (self.width / 2) - 300, 250)
-        self.screenList[0][0].addButton("Rules", (self.width / 2) - 300, 400)
-        self.screenList[0][0].addButton("Exit", (self.width / 2) - 300, 550)
+        self.screenList[0].append(Menu(self.p))  # Insert mainScreen (class object in list.)
+        self.screenList[0][0].addButton("Play", int(self.width / 3.75), 100)  # Add buttons to the screen
+        self.screenList[0][0].addButton("Options", int(self.width / 3.75), 250)
+        self.screenList[0][0].addButton("Rules", int(self.width / 3.75), 400)
+        self.screenList[0][0].addButton("Exit", int(self.width / 3.75), 550)
         # init subscreen: Options
-        self.screenList[0].append(Menu(self.screen))  # insert subScreen (class object in list.)
-        self.screenList[0][1].addButton("Back", (self.width / 2) - 300, 550)
+        self.screenList[0].append(Menu(self.p))  # insert subScreen (class object in list.)
+        self.screenList[0][1].addButton("Back", int(self.width / 3.75), 550)
+
+        self.screenList[0][1].addLabel("Fullscreen: ", int(self.width / 10 * 4), int(self.height / 10 * 1),size=int(self.height / 36))
+        self.screenList[0][1].addCheckbox("fullscreen", int(self.width / 10 * 6), int(self.height / 10 * 1))
+        self.screenList[0][1].addLabel("DoubleBuffering: ", int(self.width / 10 * 4), int(self.height / 10 * 2),size=int(self.height / 36))
+        self.screenList[0][1].addCheckbox("doublebuffering", int(self.width / 10 * 6), int(self.height / 10 * 2))
+        self.screenList[0][1].addLabel("Resizable: ", int(self.width / 10 * 4), int(self.height / 10 * 3),size=int(self.height / 36))
+        self.screenList[0][1].addCheckbox("resizable", int(self.width / 10 * 6), int(self.height / 10 * 3))
+        self.screenList[0][1].addButton("Back", int(self.width / 3.75), int(self.height / 10 * 7))
+
         # init subscreen: Rules
-        self.screenList[0].append(Menu(self.screen))
-        self.screenList[0][2].addButton("Back", (self.width / 2) - 300, 550)
+        self.screenList[0].append(Menu(self.p))
+        self.screenList[0][2].addButton("Back", int(self.width / 3.75), 550)
 
         # Init main screen: Choosing play-mode
         self.screenList.append([])  # Make room for new screen
-        self.screenList[1].append(Menu(self.screen))
-        self.screenList[1][0].addButton("Single Player", (self.width / 2) - 300, 100)
-        self.screenList[1][0].addButton("Back", (self.width / 2) - 300, 250)
+        self.screenList[1].append(Menu(self.p))
+        self.screenList[1][0].addButton("Single Player", int(self.width / 3.75), 100)
+        self.screenList[1][0].addButton("Back", int(self.width / 3.75), 250)
 
         # Init main screen: Single player play-mode settings screen
         self.screenList.append([])  # Make room for new screen
-        self.screenList[2].append(Menu(self.screen))
-        self.screenList[2][0].addButton("Play", (self.width / 2) - 300, 100)
-        self.screenList[2][0].addLabel("Players = ", (self.width / 2) - 600, 300)
-        self.screenList[2][0].addPlayerButton("4", (self.width/2) -350, 280)
+        self.screenList[2].append(Menu(self.p))
+        self.screenList[2][0].addButton("Play", int(self.width / 3.75), 100)
+        self.screenList[2][0].addLabel("Players = ", int(self.width / 3.75) - 300, 300)
+        self.screenList[2][0].addPlayerButton("4", int(self.width/3.75) - 50, 280)
         self.screenList[2][0].addButton("Back", 340, 450)
 
         # Init main screen: Actual playing board
         self.screenList.append([])  # Make room for new screen
-        self.screenList[3].append(playScreen(self.screen))
+        self.screenList[3].append(playScreen(self.p))
         self.screenList[3][0].addBoard()
         self.screenList[3][0].addButton("Psuedo Play", -100, -100)
-        self.screenList[3][0].addButton("Options", (self.width) - 255, 75, 270, 75)
+        self.screenList[3][0].addButton("Options", int(self.width) - 255, 75, 270, 75)
         self.screenList[3][0].addButton("Psuedo Exit", -100, -100)
         self.screenList[3][0].addPlayer((255, 0, 0), "P1: Red Bob", 0, 11)
         self.screenList[3][0].addPlayer((0, 255, 0), "P2: Green Frank", 1, 11)
@@ -113,21 +171,20 @@ class Game:
         self.direction = 0
         self.screenList[3][0].addDirection("Direction", 150, 50)
         # Init subscreen: pauze game
-        self.screenList[3].append(Menu(self.screen))
-        self.screenList[3][1].addButton("Continue", (self.width / 2) - 300, 100)
-        self.screenList[3][1].addButton("Main Menu", (self.width / 2) - 300, 550)
-        self.screenList[3][1].addLabel("Players = ", (self.width / 2) - 600, 300)
-        self.screenList[3][1].addPlayerButton("4", (self.width / 2) - 350, 280)
+        self.screenList[3].append(Menu(self.p))
+        self.screenList[3][1].addButton("Continue", int(self.width / 3.75), 100)
+        self.screenList[3][1].addButton("Main Menu", int(self.width / 3.75), 550)
+        self.screenList[3][1].addLabel("Players = ", int(self.width / 3.75) -300, 300)
+        self.screenList[3][1].addPlayerButton("4", int(self.width / 3.75)-50, 280)
 
         # Init Win screen
         self.screenList.append([])  # Make room for new screen
-        self.screenList[4].append(Menu(self.screen))
-
+        self.screenList[4].append(Menu(self.p))
 
         # Init set screen to be active on default
         self.activeMainScreen = 0
         self.activeSubScreen = 0
-        self.state = self.screenList[self.activeMainScreen][self.activeSubScreen]
+        #self.state = self.screenList[self.activeMainScreen][self.activeSubScreen]
 
     def passValues(self):
         if isinstance(self.state, playScreen):
@@ -136,37 +193,92 @@ class Game:
             return []
 
     def buttonFunctions(self):
-        # Defining the action of button nr.1
-        if (len(self.state.buttonList)) > 0:        # if more than 0 button (prevent list index out of range)
-            if self.state.buttonList[0]:            #   if button is pressed
-                if self.activeSubScreen > 0:        #       if a subscreen
-                    self.activeSubScreen = 0        #           go back to its main screen
-                else:                               #       else:
-                    self.activeMainScreen += 1      #           go a main screen forward
-                    self.activeSubScreen = 0
-        # Defining the action of button nr.-1 (last)
-        if (len(self.state.buttonList)) > 1:        # if more than 1 button
-            if self.state.buttonList[-1]:           #   if last button is pressed
-                if self.activeSubScreen == 0:       #       if not subscreen
-                    if self.activeMainScreen == 0:  #           if screen[0][0]
-                        self.gameExit = True        #               Exit
-                    else:                           #           else:
-                        self.activeMainScreen -= 1  #               screen -= 1
+        if self.state is self.screenList[0][1]:
+            if self.state.buttonList[0]:
+                self.state = self.screenList[0][0]
+            elif self.state.checkboxList[0] and not self.state.checkboxList[2].isChecked:
+                if self.state.checkboxList[0].isChecked:
+                    self.screenList.clear()
+                    self.p.set("fullscreen", "False")
+                    self.p.set("width", "1280")
+                    self.p.set("height", "720")
+                    self.set_screen()
+                    self.initScreens()
+                    self.state = self.screenList[0][1]
+                    self.state.checkboxList[0].isChecked = False
+                else:
+                    self.screenList.clear()
+                    self.p.set("fullscreen", "True")
+                    self.p.set("width", "1920")
+                    self.p.set("height", "1080")
+                    self.set_screen()
+                    self.initScreens()
+                    self.state = self.screenList[0][1]
+                    self.state.checkboxList[0].isChecked = True
+            elif self.state.checkboxList[1]:
+                if self.state.checkboxList[1].isChecked:
+                    self.screenList.clear()
+                    self.p.set("doublebuffering", "False")
+                    self.set_screen()
+                    self.initScreens()
+                    self.state = self.screenList[0][1]
+                    self.state.checkboxList[1].isChecked = False
+                else:
+                    self.screenList.clear()
+                    self.p.set("doublebuffering", "True")
+                    self.set_screen()
+                    self.initScreens()
+                    self.state = self.screenList[0][1]
+                    self.state.checkboxList[1].isChecked = True
+            elif self.state.checkboxList[2] and not self.state.checkboxList[0].isChecked:
+                if self.state.checkboxList[2].isChecked:
+                    self.screenList.clear()
+                    self.p.set("resizable", "False")
+                    self.set_screen()
+                    self.initScreens()
+                    self.state = self.screenList[0][1]
+                    self.state.checkboxList[2].isChecked = False
+                else:
+                    self.screenList.clear()
+                    self.p.set("resizable", "True")
+                    self.set_screen()
+                    self.initScreens()
+                    self.state = self.screenList[0][1]
+                    self.state.checkboxList[2].isChecked = True
+        else:
+            # Defining the action of button nr.1
+            if (len(self.state.buttonList)) > 0:        # if more than 0 button (prevent list index out of range)
+                if self.state.buttonList[0]:            #   if button is pressed
+                    if self.activeSubScreen > 0:        #       if a subscreen
+                        self.activeSubScreen = 0        #           go back to its main screen
+                    else:                               #       else:
+                        self.activeMainScreen += 1      #           go a main screen forward
                         self.activeSubScreen = 0
-                else:                               #       else (if subscreen, and last button pressed)
-                    self.activeMainScreen = 0       #            go to main menu
-                    self.activeSubScreen = 0
-        # Defining the action of other buttons ("Take me to subscreen" buttons)
-        if (len(self.state.buttonList) - 2) >= 0:  # if more than 2 buttons
-            for i in range(len(self.state.buttonList) - 1):
-                if self.state.buttonList[i]:
-                    self.activeSubScreen = i
+            # Defining the action of button nr.-1 (last)
+            if (len(self.state.buttonList)) > 1:        # if more than 1 button
+                if self.state.buttonList[-1]:           #   if last button is pressed
+                    if self.activeSubScreen == 0:       #       if not subscreen
+                        if self.activeMainScreen == 0:  #           if screen[0][0]
+                            self.gameExit = True        #               Exit
+                        else:                           #           else:
+                            self.activeMainScreen -= 1  #               screen -= 1
+                            self.activeSubScreen = 0
+                    else:                               #       else (if subscreen, and last button pressed)
+                        self.activeMainScreen = 0       #            go to main menu
+                        self.activeSubScreen = 0
+            # Defining the action of other buttons ("Take me to subscreen" buttons)
+            if (len(self.state.buttonList) - 2) >= 0:  # if more than 2 buttons
+                for i in range(len(self.state.buttonList) - 1):
+                    if self.state.buttonList[i]:
+                        self.activeSubScreen = i
 
-        ###Action button
-        if len(self.state.actionList) > 0:
-            if self.state.actionList[0]:
-                self.nrPlayers = (self.nrPlayers % 4) +1
-                self.state.actionList[0].buttonText = str(self.nrPlayers)
+            ###Action button
+            if len(self.state.actionList) > 0:
+                if self.state.actionList[0]:
+                    self.nrPlayers = (self.nrPlayers % 4) +1
+                    self.state.actionList[0].buttonText = str(self.nrPlayers)
+
+
 
     def dice(self, state):
         self.whoseTurn = state.playerList[state.whoseTurn]
@@ -214,6 +326,7 @@ class Game:
 
             if self.whoseTurn.moveToPosY >= 17:
                 print("WE HAVE A WINNER!")
+                self.completed = True
                 ## self.activemainscreen += 1
 
     def directionFunction(self, state):
@@ -227,6 +340,43 @@ class Game:
                 state.direction.buttonText = "Down"
             if self.direction is 3:
                 state.direction.buttonText = "Left"
+
+
+class Properties:
+    def __init__(self):
+        self.filepath = "properties.cfg"  # default file path (same directory as Program.py)
+        self.section = "PROPERTIES"
+        self.config = configparser.ConfigParser()
+        self.config.sections()
+        try:
+            with open(self.filepath) as f:
+                self.config.read_file(f)
+        except IOError:
+            self._init_default()  # if file does not exist, it creates new default properties.cfg file
+
+    def get(self, prop, type=None):  # Prop = property
+        if type is None:
+            return self.config.get(self.section, prop)
+        elif type is "int":
+            return self.config.getint(self.section, prop)
+        elif type is "bool":
+            return self.config.getboolean(self.section, prop)
+        elif type is "float":
+            return self.config.getfloat(self.section, prop)
+
+    def set(self, prop, value):  # this method also has the ability to create new properties
+        self.config.set(self.section, prop, value)
+        with open(self.filepath, 'w') as configfile:
+            self.config.write(configfile)
+
+    def _init_default(self):
+        self.config[self.section] = {"width": 1280,
+                                     "height": 720,
+                                     "resizable": False,
+                                     "doublebuffering": False,
+                                     "fullscreen": False}
+        with open(self.filepath, 'w') as configfile:
+            self.config.write(configfile)
 
 class Player():
     def __init__(self, screen, color, name, posx, posy):
@@ -428,10 +578,11 @@ class playBoard:
         for box in self.grid:
             box.draw()
 
-
 class playScreen:
-    def __init__(self, screen):
-        self.screen = screen
+    def __init__(self, p):
+        self.p = p
+        #width, height = self.screen.get_size()
+        self.set_screen()
         #self.background = pygame.image.load("res/spelbord.jpg")
         #self.backgroundtransformed = pygame.transform.scale(self.background, (int(1280 * 0.5), int(720) - 200))
         self.buttonList = []
@@ -451,6 +602,19 @@ class playScreen:
         self.whoseTempTurn = 0
 
 
+    def set_screen(self):
+        flags = 0x0
+        width = self.p.get("width", "int")
+        height = self.p.get("height", "int")
+        if self.p.get("doublebuffering", "bool"):
+            flags |= pygame.DOUBLEBUF
+        if self.p.get("fullscreen", "bool"):
+            flags |= pygame.FULLSCREEN
+        if self.p.get("resizable", "bool"):
+            flags |= pygame.RESIZABLE
+        self.screen = pygame.display.set_mode((width, height), flags)
+        self.width = pygame.display.get_surface().get_width()
+        self.height = pygame.display.get_surface().get_height()
 
     def draw(self, whoseTurn, tempTurn, whoseTempTurn, state, roundNr, activeMainScreen, nrPlayers):
         self.nrPlayers = nrPlayers
@@ -504,12 +668,35 @@ class playScreen:
         pygame.display.update()
 
 class Menu:
-    def __init__(self, screen):
-        self.screen = screen
+    def __init__(self, p):
+        self.p = p
+        self.set_screen()
         self.background = (24, 147, 60)
+        self.width, self.height = self.screen.get_size()
         self.buttonList = []
         self.labelList = []
         self.actionList = []
+        self.checkboxList = []
+
+    def addCheckbox(self, prop, posx, posy):
+        width = int(self.width / 51.2)
+        height = int(self.height / 28.8)
+        isChecked = self.p.get(prop, "bool")
+        self.checkboxList.append(MenuCheckbox(self.screen, isChecked, posx, posy, width, height))
+
+    def set_screen(self):
+        flags = 0x0
+        width = self.p.get("width", "int")
+        height = self.p.get("height", "int")
+        if self.p.get("doublebuffering", "bool"):
+            flags |= pygame.DOUBLEBUF
+        if self.p.get("fullscreen", "bool"):
+            flags |= pygame.FULLSCREEN
+        if self.p.get("resizable", "bool"):
+            flags |= pygame.RESIZABLE
+        self.screen = pygame.display.set_mode((width, height), flags)
+        self.width = pygame.display.get_surface().get_width()
+        self.height = pygame.display.get_surface().get_height()
 
     def draw(self):
         self.screen.fill(self.background)
@@ -519,6 +706,8 @@ class Menu:
             label.draw()
         for action in self.actionList:
             action.draw()
+        for checkbox in self.checkboxList:
+            checkbox.draw()
 
     def addButton(self, text, posx, posy, width = 600, height = 100):
         self.buttonList.append(MenuButton(self.screen, text, posx, posy, width, height))
@@ -528,7 +717,6 @@ class Menu:
 
     def addPlayerButton(self, text, posx, posy, width = 100, height = 100):
         self.actionList.append(MenuButton(self.screen, text, posx, posy, width, height))
-
 
 class MenuButton:
 
@@ -589,7 +777,6 @@ class MenuButton:
         else:
             return False
 
-
 class Label:
 
     def __init__(self, screen, text, posx = None, posy = None, size = 50, color = (200, 200, 200)):
@@ -621,5 +808,23 @@ class Label:
         else:
             print("Position of a label is not set.")
 
+class MenuCheckbox:
+    def __init__(self, screen, isChecked, posx, posy, width, height):
+        self.isChecked = isChecked
+        self.screen = screen
+        self.rect = pygame.Rect(posx, posy, width, height)
+
+    def draw(self):
+        if not self.isChecked:
+            pygame.draw.rect(self.screen, (0, 0, 0), self.rect, 5)
+        else:
+            pygame.draw.rect(self.screen, (0, 0, 0), self.rect)
+
+    def __bool__(self):
+        mouseX, mouseY = pygame.mouse.get_pos()
+        if (mouseX > self.rect.x and mouseX < (self.rect.x+self.rect.width)) and (mouseY > self.rect.y and mouseY < (self.rect.y+self.rect.height)):
+            return True
+        else:
+            return False
 if __name__ == '__main__':
     Game().run()
