@@ -116,6 +116,8 @@ class Game:
         self.screenList[3].append(Menu(self.screen))
         self.screenList[3][1].addButton("Continue", (self.width / 2) - 300, 100)
         self.screenList[3][1].addButton("Main Menu", (self.width / 2) - 300, 550)
+        self.screenList[3][1].addLabel("Players = ", (self.width / 2) - 600, 300)
+        self.screenList[3][1].addPlayerButton("4", (self.width / 2) - 350, 280)
 
         # Init Win screen
         self.screenList.append([])  # Make room for new screen
@@ -129,7 +131,7 @@ class Game:
 
     def passValues(self):
         if isinstance(self.state, playScreen):
-            return [self.state.whoseTurn, self.state.tempTurn, self.state.whoseTempTurn, self.state, self.state.roundNr, self.activeMainScreen]
+            return [self.state.whoseTurn, self.state.tempTurn, self.state.whoseTempTurn, self.state, self.state.roundNr, self.activeMainScreen, self.nrPlayers]
         else:
             return []
 
@@ -450,7 +452,8 @@ class playScreen:
 
 
 
-    def draw(self, whoseTurn, tempTurn, whoseTempTurn, state, roundNr, activeMainScreen):
+    def draw(self, whoseTurn, tempTurn, whoseTempTurn, state, roundNr, activeMainScreen, nrPlayers):
+        self.nrPlayers = nrPlayers
         self.screen.fill((0, 0, 0))
         #self.screen.blit(self.backgroundtransformed, (1280 / 4, 100))
 
@@ -460,7 +463,7 @@ class playScreen:
             button.draw()
         for label in self.labelList:
             label.draw()
-        for player in self.playerList:
+        for player in self.playerList[0:self.nrPlayers]:
             player.draw(state)
         #self.checkOverlap(state)
         self.dice.draw()
