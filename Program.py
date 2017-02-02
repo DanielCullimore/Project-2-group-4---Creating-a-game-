@@ -347,8 +347,11 @@ class Game:
             self.moveNumber = math.ceil(self.diceNumber/2)
             state.dice.buttonText = str(self.diceNumber)
 
-            x = QuestionScreen(self.screen, self.p, self.whoseTurn).run()
-            if x:
+            if not self.state.tempTurn:
+                x = QuestionScreen(self.screen, self.p, self.whoseTurn).run()
+            else:
+                x = True
+            if x or self.state.tempTurn:
                 if (state.tempTurn):
                     self.whoseTempTurn.moving = True
                     self.whoseTempTurn.steps = 0
