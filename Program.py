@@ -166,16 +166,16 @@ class Game:
         self.screenList[0][2].addButton("Back", int(self.width / 3.75), 550)
 
 
-        self.screenList[0].append(Menu(self.screen))  # Insert mainScreen#  (class object in list.)
-        self.screenList[0][0].addLabel("Highscores", int(self.width / 2.75), 50)
+        self.screenList[0].append(Menu(self.p))  # Insert mainScreen#  (class object in list.)
+        self.screenList[0][3].addLabel("Highscores", int(self.width / 2.75), 50)
 
-        self.screenList[0][0].addLabel("First place: {} {}".format(str(scores.Firstname), str(scores.Firstscore)),
+        self.screenList[0][3].addLabel("First place: {} {}".format(str(scores.Firstname), str(scores.Firstscore)),
                                        int(self.width / 2.5), 200, size=20)
-        self.screenList[0][0].addLabel("Second place: {} {} ".format(str(scores.Secondname), str(scores.Secondscore)),
+        self.screenList[0][3].addLabel("Second place: {} {} ".format(str(scores.Secondname), str(scores.Secondscore)),
                                        int(self.width / 2.5), 300, size=20)
-        self.screenList[0][0].addLabel("Third place: {} {}".format(str(scores.Thirdname), str(scores.Thirdscore)),
+        self.screenList[0][3].addLabel("Third place: {} {}".format(str(scores.Thirdname), str(scores.Thirdscore)),
                                        int(self.width / 2.5), 400, size=20)
-        self.screenList[0][0].addButton("Back", int(self.width / 2.75), 500)  # Add buttons to the screen
+        self.screenList[0][3].addButton("Back", int(self.width / 2.75), 500)  # Add buttons to the screen
 
         # Init main screen: Choosing play-mode
         self.screenList.append([])  # Make room for new screen
@@ -1154,6 +1154,9 @@ class Timer:
     def reset(self):
         self.time = pygame.time.get_ticks()
 
+
+scores = score(db.download_top_score()[0][0], db.download_top_score()[0][1], db.download_top_score()[1][0],
+               db.download_top_score()[1][1], db.download_top_score()[2][0], db.download_top_score()[2][1])
+
 if __name__ == '__main__':
     Game().run()
-scores = score(database.download_top_score()[0][0],database.download_top_score()[0][1],database.download_top_score()[1][0],database.download_top_score()[1][1],database.download_top_score()[2][0],database.download_top_score()[2][1])
