@@ -173,9 +173,14 @@ class Game:
         # Init subscreen: pauze game
         self.screenList[3].append(Menu(self.p))
         self.screenList[3][1].addButton("Continue", int(self.width / 3.75), 100)
+        self.screenList[3][1].addButton("PSUEDO", int(self.width+10), 0)
+        self.screenList[3][1].addButton("Read rules", int(self.width / 3.75) + 200, 300)
         self.screenList[3][1].addButton("Main Menu", int(self.width / 3.75), 550)
         self.screenList[3][1].addLabel("Players = ", int(self.width / 3.75) -300, 300)
         self.screenList[3][1].addPlayerButton("4", int(self.width / 3.75)-50, 280)
+        # Init subscreen: Rules
+        self.screenList[3].append(Menu(self.p))
+        self.screenList[3][2].addButton("Back", int(self.width / 3.75), 550)
 
         # Init Win screen
         self.screenList.append([])  # Make room for new screen
