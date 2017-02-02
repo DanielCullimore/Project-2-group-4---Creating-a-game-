@@ -132,9 +132,10 @@ class Game:
         self.screenList.append([])  # Make room for new screen
         self.screenList[0].append(Menu(self.p))  # Insert mainScreen (class object in list.)
         self.screenList[0][0].addButton("Play", int(self.width / 3.75), 100)  # Add buttons to the screen
-        self.screenList[0][0].addButton("Options", int(self.width / 3.75), 250)
-        self.screenList[0][0].addButton("Rules", int(self.width / 3.75), 400)
-        self.screenList[0][0].addButton("Exit", int(self.width / 3.75), 550)
+        self.screenList[0][0].addButton("Options", int(self.width / 3.75), 220)
+        self.screenList[0][0].addButton("Rules", int(self.width / 3.75), 340)
+        self.screenList[0][0].addButton("Highscore", int(self.width / 3.75), 460)
+        self.screenList[0][0].addButton("Exit", int(self.width / 3.75), 580)
         # init subscreen: Options
         self.screenList[0].append(Menu(self.p))  # insert subScreen (class object in list.)
         #self.screenList[0][1].addButton("Back", int(self.width / 3.75), 550)
@@ -163,6 +164,18 @@ class Game:
         self.screenList[0][2].addLabel1("and questions: Blue = Sports, Green = Geography,", (self.width / 2) - 625, 360)
         self.screenList[0][2].addLabel1("Red = Entertainment and Yellow = History", (self.width / 2) - 625, 395)
         self.screenList[0][2].addButton("Back", int(self.width / 3.75), 550)
+
+
+        self.screenList[0].append(Menu(self.screen))  # Insert mainScreen#  (class object in list.)
+        self.screenList[0][0].addLabel("Highscores", int(self.width / 2.75), 50)
+
+        self.screenList[0][0].addLabel("First place: {} {}".format(str(scores.Firstname), str(scores.Firstscore)),
+                                       int(self.width / 2.5), 200, size=20)
+        self.screenList[0][0].addLabel("Second place: {} {} ".format(str(scores.Secondname), str(scores.Secondscore)),
+                                       int(self.width / 2.5), 300, size=20)
+        self.screenList[0][0].addLabel("Third place: {} {}".format(str(scores.Thirdname), str(scores.Thirdscore)),
+                                       int(self.width / 2.5), 400, size=20)
+        self.screenList[0][0].addButton("Back", int(self.width / 2.75), 500)  # Add buttons to the screen
 
         # Init main screen: Choosing play-mode
         self.screenList.append([])  # Make room for new screen
@@ -1001,6 +1014,14 @@ class MenuButton:
             return True
         else:
             return False
+class score:
+    def __init__(self,first_name,first_score,second_name,second_score,third_name,third_score):
+        self.Firstname = first_name
+        self.Firstscore = first_score
+        self.Secondname = second_name
+        self.Secondscore = second_score
+        self.Thirdname = third_name
+        self.Thirdscore = third_score
 
 class Label:
 
@@ -1135,3 +1156,4 @@ class Timer:
 
 if __name__ == '__main__':
     Game().run()
+scores = score(database.download_top_score()[0][0],database.download_top_score()[0][1],database.download_top_score()[1][0],database.download_top_score()[1][1],database.download_top_score()[2][0],database.download_top_score()[2][1])
