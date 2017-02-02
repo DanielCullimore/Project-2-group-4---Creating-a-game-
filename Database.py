@@ -25,7 +25,8 @@ def interact_with_database(command):
     connection.close()
 
     return results
-
+def create_score():
+    interact_with_database("CREATE TABLE score(name text,score int)")
 
 # Uploads a score into the highscore table
 def upload_score(name, score):
@@ -101,7 +102,7 @@ def separate_question(nr):
     questionlist.append(download_question_answer(nr))
     return questionlist
 
-upload_score("Dani",20)
+create_score()
 
 
 print(download_scores())
