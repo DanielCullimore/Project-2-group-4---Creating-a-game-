@@ -3,7 +3,6 @@ import sys
 from random import *
 import math
 import configparser
-import database
 
 class Game:
 
@@ -124,10 +123,9 @@ class Game:
         self.screenList.append([])  # Make room for new screen
         self.screenList[0].append(Menu(self.p))  # Insert mainScreen (class object in list.)
         self.screenList[0][0].addButton("Play", int(self.width / 3.75), 100)  # Add buttons to the screen
-        self.screenList[0][0].addButton("Options", int(self.width / 3.75), 220)
-        self.screenList[0][0].addButton("Rules", int(self.width / 3.75), 340)
-        self.screenList[0][0].addButton("Highscore", int(self.width / 3.75), 460)
-        self.screenList[0][0].addButton("Exit", int(self.width / 3.75), 580)
+        self.screenList[0][0].addButton("Options", int(self.width / 3.75), 250)
+        self.screenList[0][0].addButton("Rules", int(self.width / 3.75), 400)
+        self.screenList[0][0].addButton("Exit", int(self.width / 3.75), 550)
         # init subscreen: Options
         self.screenList[0].append(Menu(self.p))  # insert subScreen (class object in list.)
         #self.screenList[0][1].addButton("Back", int(self.width / 3.75), 550)
@@ -143,13 +141,6 @@ class Game:
         # init subscreen: Rules
         self.screenList[0].append(Menu(self.p))
         self.screenList[0][2].addButton("Back", int(self.width / 3.75), 550)
-
-        #init subscreen: highscore
-        self.screenList[0].append(Menu(self.p))
-        self.screenList[0][3].addLabel("First place: {} {}".format(str(scores.Firstname),str(scores.Firstscore)), int(self.width / 2.5), 200, size=20)
-        self.screenList[0][3].addLabel("Second place: {} {} ".format(str(scores.Secondname),str(scores.Secondscore)), int(self.width / 2.5), 250, size=20)
-        self.screenList[0][3].addLabel("Third place: {} {}".format(str(scores.Thirdname),str(scores.Thirdscore)), int(self.width / 2.5), 300, size=20)
-        self.screenList[0][3].addButton("Back", int(self.width / 3.75), 550)
 
         # Init main screen: Choosing play-mode
         self.screenList.append([])  # Make room for new screen
@@ -189,6 +180,7 @@ class Game:
         # Init Win screen
         self.screenList.append([])  # Make room for new screen
         self.screenList[4].append(Menu(self.p))
+        self.screenList[4][0].addLabel("You Won!", int(self.width/3.75), 100)
 
         # Init set screen to be active on default
         self.activeMainScreen = 0
@@ -219,10 +211,9 @@ class Game:
                     self.state.checkboxList[0].isChecked = False
                 else:
                     self.screenList.clear()
-                    w, h = pygame.display.list_modes()[1]
                     self.p.set("fullscreen", "True")
-                    self.p.set("width", str(w))
-                    self.p.set("height", str(h))
+                    self.p.set("width", "1920")
+                    self.p.set("height", "1080")
                     self.set_screen()
                     self.initScreens()
                     self.state = self.screenList[0][1]
@@ -565,7 +556,7 @@ class Player(pygame.sprite.Sprite):
         if (self.moveToPosY > self.posY):  # GO UP
             self.image = self.ss.get_sprite(self.frame, 2)
             self.lastState = 2
-            print("WIJASJDIASD")
+            #print("WIJASJDIASD")
         elif (self.moveToPosY < self.posY): # Move down
             self.image = self.ss.get_sprite(self.frame, 0)
             self.lastState = 0
@@ -599,6 +590,11 @@ class Player(pygame.sprite.Sprite):
 
 
     def draw(self, state): # State == screen
+
+        self.category = state.board.grid[self.posX + self.posY * 8].category
+        if state.playerList[state.whoseTurn].name is self.name:
+            print("Player " + str(state.playerList[state.whoseTurn].name) + " category = "+str(self.category))
+
         if (state.whoseTurn is state.playerList.index(self) or (state.tempTurn and state.whoseTempTurn is state.playerList.index(self))):
             if self.moving:
                 self.move(state)
@@ -663,7 +659,7 @@ class box:
         self.posX = self.boxPosX+(self.x*self.sizeX)
         self.posY = self.boxPosY+self.boxSizeY-(self.y*self.sizeY)-self.sizeY
         self.category = 0
-        self.color = (0,0,0)
+        self.color = (0,0,0,0)
         self.font = pygame.font.SysFont('moonspace', 12)
 
         #print(self.boxSizeY)
@@ -717,8 +713,8 @@ class box:
                                                        self.sizeY,), 2)
 
 
-        screen_text = self.font.render("x="+str(self.x)+"  y="+str(self.y), True, (255,255,255))
-        self.screen.blit(screen_text, (self.posX+self.sizeX/4, self.posY+self.sizeY/4))
+        #screen_text = self.font.render("x="+str(self.x)+"  y="+str(self.y), True, (255,255,255))
+        #self.screen.blit(screen_text, (self.posX+self.sizeX/4, self.posY+self.sizeY/4))
         #pygame.display.update()
 
 class playBoard:
@@ -746,8 +742,8 @@ class playScreen:
         self.p = p
         #width, height = self.screen.get_size()
         self.set_screen()
-        #self.background = pygame.image.load("res/spelbord.jpg")
-        #self.backgroundtransformed = pygame.transform.scale(self.background, (int(1280 * 0.5), int(720) - 200))
+        self.background = pygame.image.load("res/bg.jpg")
+        self.backgroundtransformed = pygame.transform.scale(self.background, (self.width, self.height))
         self.buttonList = []
         self.labelList = []
         self.playerList = []
@@ -781,8 +777,8 @@ class playScreen:
 
     def draw(self, whoseTurn, tempTurn, whoseTempTurn, state, roundNr, activeMainScreen, nrPlayers):
         self.nrPlayers = nrPlayers
-        self.screen.fill((0, 0, 0))
-        #self.screen.blit(self.backgroundtransformed, (1280 / 4, 100))
+        #self.screen.fill((0, 0, 0))
+        self.screen.blit(self.backgroundtransformed, (0, 0))
 
         self.board.draw()
 
@@ -795,11 +791,11 @@ class playScreen:
         #self.checkOverlap(state)
         self.dice.draw()
         self.direction.draw()
-        self.round("Round "+str(self.roundNr), (255,255,255))
+        self.round("Round "+str(self.roundNr), (0,0,0))
         if tempTurn:
-            self.players_turn("Player " + str(self.playerList[whoseTempTurn].name) + " has to move backwards! Roll the dice", (255, 255, 255))
+            self.players_turn("Player " + str(self.playerList[whoseTempTurn].name) + " has to move backwards! Roll the dice", (0, 0, 0))
         else:
-            self.players_turn("Player "+str(self.playerList[whoseTurn].name)+" turn", (255, 255, 255))
+            self.players_turn("Player "+str(self.playerList[whoseTurn].name)+" turn", (0, 0, 0))
 
 
     def addBoard(self):
@@ -939,14 +935,6 @@ class MenuButton:
             return True
         else:
             return False
-class score:
-    def __init__(self,first_name,first_score,second_name,second_score,third_name,third_score):
-        self.Firstname = first_name
-        self.Firstscore = first_score
-        self.Secondname = second_name
-        self.Secondscore = second_score
-        self.Thirdname = third_name
-        self.Thirdscore = third_score
 
 class Label:
 
@@ -997,8 +985,5 @@ class MenuCheckbox:
             return True
         else:
             return False
-
-scores = score(database.download_top_score()[0][0],database.download_top_score()[0][1],database.download_top_score()[1][0],database.download_top_score()[1][1],database.download_top_score()[2][0],database.download_top_score()[2][1])
-
 if __name__ == '__main__':
     Game().run()
