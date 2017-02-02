@@ -373,8 +373,9 @@ class Game:
             self.whoseTurn.moveAlongBoard(state)
 
             if self.whoseTurn.moveToPosY >= 17:
-                print("WE HAVE A WINNER!")
+                print("Player "+str(self.whoseTurn.name)+" won the game!")
                 self.completed = True
+                self.screenList[4][0].labelList[0].text = "Player "+str(self.whoseTurn.name)+" won the game!"
                 ## self.activemainscreen += 1
 
     def directionFunction(self, state):
