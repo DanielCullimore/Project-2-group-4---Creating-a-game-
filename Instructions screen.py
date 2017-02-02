@@ -78,16 +78,16 @@ class Game:
         self.screenList[0][1].addButton("Back", (self.width / 2) - 300, 550)
         # init subscreen: Rules
         self.screenList[0].append(Menu(self.screen))
-        self.screenList[0][2].addLabel("The game is played with 2 - 4 players.",(self.width / 2) - 625, 20)
-        self.screenList[0][2].addLabel("There is a dice you can roll when you",(self.width / 2) - 625, 55)
-        self.screenList[0][2].addLabel("answer a question correctly.", (self.width / 2) - 625, 90)
-        self.screenList[0][2].addLabel("If a player ends up on another players hole, the player who", (self.width / 2) - 625, 150)
-        self.screenList[0][2].addLabel("was already on that hole throws a dice", (self.width / 2) - 625, 185)
-        self.screenList[0][2].addLabel("The number given after throwing the dice (numbers 1 to 6)", (self.width / 2) - 625, 220)
-        self.screenList[0][2].addLabel("is the number the player has to go down", (self.width / 2) - 625, 255)
-        self.screenList[0][2].addLabel("There are four different categories, each with its own color",(self.width / 2) - 625, 325)
-        self.screenList[0][2].addLabel("and questions: Blue = Sports, Green = Geography,",(self.width / 2) - 625, 360)
-        self.screenList[0][2].addLabel("Red = Entertainment and Yellow = History",(self.width / 2) - 625, 395)
+        self.screenList[0][2].addLabel1("The game is played with 2 - 4 players.",(self.width / 2) - 625, 20)
+        self.screenList[0][2].addLabel1("There is a dice you can roll when you",(self.width / 2) - 625, 55)
+        self.screenList[0][2].addLabel1("answer a question correctly.", (self.width / 2) - 625, 90)
+        self.screenList[0][2].addLabel1("If a player ends up on another players hole, the player who", (self.width / 2) - 625, 150)
+        self.screenList[0][2].addLabel1("was already on that hole throws a dice", (self.width / 2) - 625, 185)
+        self.screenList[0][2].addLabel1("The number given after throwing the dice (numbers 1 to 6)", (self.width / 2) - 625, 220)
+        self.screenList[0][2].addLabel1("is the number the player has to go down", (self.width / 2) - 625, 255)
+        self.screenList[0][2].addLabel1("There are four different categories, each with its own color",(self.width / 2) - 625, 325)
+        self.screenList[0][2].addLabel1("and questions: Blue = Sports, Green = Geography,",(self.width / 2) - 625, 360)
+        self.screenList[0][2].addLabel1("Red = Entertainment and Yellow = History",(self.width / 2) - 625, 395)
         self.screenList[0][2].addButton("Back", (self.width / 2) - 300, 550)
 
         # Init main screen: Choosing play-mode
@@ -444,7 +444,10 @@ class Menu:
     def addButton(self, text, posx, posy, width = 600, height = 100):
         self.buttonList.append(MenuButton(self.screen, text, posx, posy, width, height))
 
-    def addLabel(self, text, posx, posy, size = 35, color = (200, 200, 200)):
+    def addLabel(self, text, posx, posy, size = 50, color = (200, 200, 200)):
+        self.labelList.append(Label(self.screen, text, posx, posy, size, color))
+
+    def addLabel1(self, text, posx, posy, size=35, color=(200, 200, 200)):
         self.labelList.append(Label(self.screen, text, posx, posy, size, color))
 
 
