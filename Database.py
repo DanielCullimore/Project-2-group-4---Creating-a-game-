@@ -39,9 +39,10 @@ def upload_score(name, score):
 def clean_score():
     interact_with_database("DELETE FROM score")
 
+
 # Download score from database
 def download_scores():
-    return interact_with_database("SELECT * FROM score")
+    return interact_with_database("SELECT * FROM score ORDER BY score ASC")
 
 # Downloads the questions
 def download_questions():
@@ -49,7 +50,7 @@ def download_questions():
 
 # Downloads the top score from database
 def download_top_score():
-    result = interact_with_database("SELECT * FROM score ORDER BY score")
+    result = interact_with_database("SELECT * FROM score ORDER BY score ")
     return result
 
 # Download a single question
@@ -102,11 +103,5 @@ def separate_question(nr):
     questionlist.append(download_question_answer(nr))
     return questionlist
 
-create_score()
 
-
-print(download_scores())
-
-
-
-
+print(download_top_score())

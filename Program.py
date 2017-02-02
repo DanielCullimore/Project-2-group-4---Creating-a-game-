@@ -405,6 +405,7 @@ class Game:
                     print("Player "+str(self.whoseTurn.name)+" won the game!")
                     self.completed = True
                     self.screenList[4][0].labelList[0].text = "Player "+str(self.whoseTurn.name)+" won the game!"
+                    db.upload_score(str(self.whoseTurn.name), state.roundNr)
                     ## self.activemainscreen += 1
             else:
                 self.whoseTurn.imdone = True
