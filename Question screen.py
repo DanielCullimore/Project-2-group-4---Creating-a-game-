@@ -26,6 +26,8 @@ class Game:
                     if self.state is subScreen: # Filter out the pygame screen that should be active (the var self.state is changed through menu buttons)
                         subScreen.draw()        # Draw that screen
 
+            self.t.get_label().draw()
+
             pygame.display.flip()
 
             # Update pygame screen
@@ -64,38 +66,47 @@ class Game:
         # init main screen: Main Menu
         self.screenList.append([])  # Make room for new screen
         self.screenList[0].append(Menu(self.screen))  # Insert mainScreen#  (class object in list.)
-        self.screenList[0][0].addLabel("Question: ", (self.width / 2) - 625, 25)
-        self.screenList[0][0].addButton("A", (self.width / 2) - 625, 250)  # Add buttons to the screen
-        self.screenList[0][0].addLabel("Answer A: ", (self.width / 2) - 325, 275)
-        self.screenList[0][0].addButton("B", (self.width / 2) - 625, 350)
-        self.screenList[0][0].addLabel("Answer B: ", (self.width / 2) - 325, 375)
-        self.screenList[0][0].addButton("C", (self.width / 2) - 625, 450)
-        self.screenList[0][0].addLabel("Answer C: ", (self.width / 2) - 325, 475)
+        self.screenList[0][0].addLabel("Question: ", int(self.width / 8), 25)
+        self.screenList[0][0].addButton("A", int(self.width / 8), 200)  # Add buttons to the screen
+        self.screenList[0][0].addLabel("Answer A: ", int(self.width / 2.75), 200, size=20)
+        self.screenList[0][0].addButton("B", int(self.width / 8), 350)
+        self.screenList[0][0].addLabel("Answer B: ", int(self.width / 2.75), 350, size=20)
+        self.screenList[0][0].addButton("C", int(self.width / 8), 500)
+        self.screenList[0][0].addLabel("Answer C: ", int(self.width / 2.75), 500, size=20)
 
+        self.t = Timer(self.screen)
         # Init set screen to be active on default
         self.activeMainScreen = 0
         self.activeSubScreen = 0
         self.state = self.screenList[self.activeMainScreen][self.activeSubScreen]
 
     def buttonFunctions(self):
-        if (len(self.state.buttonList)) > 0:    # if more than 1 button
-            if self.state.buttonList[0]:        # if button is pressed
-                self.activeMainScreen += 1      # go a main screen forward
-                self.activeSubScreen = 0
-        if (len(self.state.buttonList)) > 1:
-            if self.state.buttonList[-1]:
-                if self.activeSubScreen == 0:
-                    if self.activeMainScreen == 0:
-                        self.gameExit = True
-                    else:
-                        self.activeMainScreen -= 1
-                        self.activeSubScreen = 0
-                else:
+        if self.state is self.screenList[0][0]:
+            if self.state.buttonList[0]:
+                print("Wrong!")
+            elif self.state.buttonList[1]:
+                print("Wrong!")
+            elif self.state.buttonList[2]:
+                print("Right!")
+        else:
+            if (len(self.state.buttonList)) > 0:  # if more than 1 button
+                if self.state.buttonList[0]:  # if button is pressed
+                    self.activeMainScreen += 1  # go a main screen forward
                     self.activeSubScreen = 0
-        if (len(self.state.buttonList) - 2) >= 0:  # if more than 2 buttons
-            for i in range(len(self.state.buttonList) - 1):
-                if self.state.buttonList[i]:
-                    self.activeSubScreen = i
+            if (len(self.state.buttonList)) > 1:
+                if self.state.buttonList[-1]:
+                    if self.activeSubScreen == 0:
+                        if self.activeMainScreen == 0:
+                            self.gameExit = True
+                        else:
+                            self.activeMainScreen -= 1
+                            self.activeSubScreen = 0
+                    else:
+                        self.activeSubScreen = 0
+            if (len(self.state.buttonList) - 2) >= 0:  # if more than 2 buttons
+                for i in range(len(self.state.buttonList) - 1):
+                    if self.state.buttonList[i]:
+                        self.activeSubScreen = i
 
 
 class playScreen:
@@ -198,6 +209,26 @@ class MenuButton:
             return True
         else:
             return False
+class Timer:
+    def __init__(self, screen, posx = 0, posy = 0):
+        self.posx = posx
+        self.posy = posy
+        self.time = pygame.time.get_ticks()
+        self.screen = screen
+        pass
+
+    def get_time(self):
+        return int(pygame.time.get_ticks() - self.time)
+
+    def get_label(self):
+        return Label(self.screen, str(int(self.get_time()/1000)), self.posx, self.posy)
+
+    def reset(self):
+        self.time = pygame.time.get_ticks()
+
+
+
+
 class Label:
     def __init__(self, screen, text, posx = None, posy = None, size = 50, color = (200, 200, 200)):
         """Initialize Label object"""
