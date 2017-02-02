@@ -219,9 +219,10 @@ class Game:
                     self.state.checkboxList[0].isChecked = False
                 else:
                     self.screenList.clear()
+                    w, h = pygame.display.list_modes()[1]
                     self.p.set("fullscreen", "True")
-                    self.p.set("width", "1920")
-                    self.p.set("height", "1080")
+                    self.p.set("width", str(w))
+                    self.p.set("height", str(h))
                     self.set_screen()
                     self.initScreens()
                     self.state = self.screenList[0][1]
