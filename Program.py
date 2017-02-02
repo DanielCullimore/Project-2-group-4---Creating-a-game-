@@ -54,12 +54,12 @@ class Game:
                     tempMain = self.activeMainScreen
                     tempSub = self.activeSubScreen
                     self.screenList.clear()
-                    # if event.h < 480 or event.w < 640:
-                    #     self.p.set("width", "1024")
-                    #     self.p.set("height", "768")
-                    # else:
-                    self.p.set("width", str(event.w))
-                    self.p.set("height", str(event.h))
+                    if event.h < 480 or event.w < 640:
+                        self.p.set("width", "1024")
+                        self.p.set("height", "768")
+                    else:
+                        self.p.set("width", str(event.w))
+                        self.p.set("height", str(event.h))
 
                     self.set_screen()
                     self.initScreens()
@@ -128,7 +128,7 @@ class Game:
         self.screenList[0][0].addButton("Exit", int(self.width / 3.75), 550)
         # init subscreen: Options
         self.screenList[0].append(Menu(self.p))  # insert subScreen (class object in list.)
-        self.screenList[0][1].addButton("Back", int(self.width / 3.75), 550)
+        #self.screenList[0][1].addButton("Back", int(self.width / 3.75), 550)
 
         self.screenList[0][1].addLabel("Fullscreen: ", int(self.width / 10 * 4), int(self.height / 10 * 1),size=int(self.height / 36))
         self.screenList[0][1].addCheckbox("fullscreen", int(self.width / 10 * 6), int(self.height / 10 * 1))
@@ -163,10 +163,10 @@ class Game:
         self.screenList[3][0].addButton("Psuedo Play", -100, -100)
         self.screenList[3][0].addButton("Options", int(self.width) - 255, 75, 270, 75)
         self.screenList[3][0].addButton("Psuedo Exit", -100, -100)
-        self.screenList[3][0].addPlayer((255, 0, 0), "P1: Red Bob", 0, 11)
-        self.screenList[3][0].addPlayer((0, 255, 0), "P2: Green Frank", 1, 11)
-        self.screenList[3][0].addPlayer((0, 0, 255), "P3: Blue Mike", 6, 11)
-        self.screenList[3][0].addPlayer((255, 0, 255), "P4: Magenta Fox", 7, 11)
+        self.screenList[3][0].addPlayer((255, 0, 0), "P1: Red Bob", 0, 0, "res/Player red.png", self.screenList[3][0])
+        self.screenList[3][0].addPlayer((0, 255, 0), "P2: Green Frank", 2, 0, "res/Player green.png", self.screenList[3][0])
+        self.screenList[3][0].addPlayer((0, 0, 255), "P3: Blue Mike", 4, 0, "res/Player blue.png", self.screenList[3][0])
+        self.screenList[3][0].addPlayer((255, 0, 255), "P4: Magenta Fox", 6, 0, "res/Player yellow.png", self.screenList[3][0])
         self.screenList[3][0].addDice("Dice", 50, 50)
         self.direction = 0
         self.screenList[3][0].addDirection("Direction", 150, 50)
@@ -205,6 +205,8 @@ class Game:
                     self.set_screen()
                     self.initScreens()
                     self.state = self.screenList[0][1]
+                    self.activeMainScreen = 0
+                    self.activeSubScreen = 1
                     self.state.checkboxList[0].isChecked = False
                 else:
                     self.screenList.clear()
@@ -214,6 +216,8 @@ class Game:
                     self.set_screen()
                     self.initScreens()
                     self.state = self.screenList[0][1]
+                    self.activeMainScreen = 0
+                    self.activeSubScreen = 1
                     self.state.checkboxList[0].isChecked = True
             elif self.state.checkboxList[1]:
                 if self.state.checkboxList[1].isChecked:
@@ -222,6 +226,8 @@ class Game:
                     self.set_screen()
                     self.initScreens()
                     self.state = self.screenList[0][1]
+                    self.activeMainScreen = 0
+                    self.activeSubScreen = 1
                     self.state.checkboxList[1].isChecked = False
                 else:
                     self.screenList.clear()
@@ -229,6 +235,8 @@ class Game:
                     self.set_screen()
                     self.initScreens()
                     self.state = self.screenList[0][1]
+                    self.activeMainScreen = 0
+                    self.activeSubScreen = 1
                     self.state.checkboxList[1].isChecked = True
             elif self.state.checkboxList[2] and not self.state.checkboxList[0].isChecked:
                 if self.state.checkboxList[2].isChecked:
@@ -237,6 +245,8 @@ class Game:
                     self.set_screen()
                     self.initScreens()
                     self.state = self.screenList[0][1]
+                    self.activeMainScreen = 0
+                    self.activeSubScreen = 1
                     self.state.checkboxList[2].isChecked = False
                 else:
                     self.screenList.clear()
@@ -244,8 +254,14 @@ class Game:
                     self.set_screen()
                     self.initScreens()
                     self.state = self.screenList[0][1]
+                    self.activeMainScreen = 0
+                    self.activeSubScreen = 1
                     self.state.checkboxList[2].isChecked = True
+            if self.state.buttonList[-1]:
+                self.activeMainScreen = 0
+                self.activeSubScreen = 0
         else:
+            #print(11)
             # Defining the action of button nr.1
             if (len(self.state.buttonList)) > 0:        # if more than 0 button (prevent list index out of range)
                 if self.state.buttonList[0]:            #   if button is pressed
@@ -308,7 +324,7 @@ class Game:
                             self.whoseTurn.moveToPosX = 5
                             print("P4")
                         elif self.whoseTurn.posX is 2 or self.whoseTurn.posX is 3:
-                            self.whoseTurn.moveToPosY = 3
+                            self.whoseTurn.moveToPosX = 3
                             print("P2")
                         elif self.whoseTurn.posX is 4 or self.whoseTurn.posX is 5:
                             self.whoseTurn.moveToPosX = 4
@@ -340,7 +356,6 @@ class Game:
                 state.direction.buttonText = "Down"
             if self.direction is 3:
                 state.direction.buttonText = "Left"
-
 
 class Properties:
     def __init__(self):
@@ -378,11 +393,21 @@ class Properties:
         with open(self.filepath, 'w') as configfile:
             self.config.write(configfile)
 
-class Player():
-    def __init__(self, screen, color, name, posx, posy):
+class Player(pygame.sprite.Sprite):
+    def __init__(self, screen, color, name, posx, posy, skinPath, state):
         self.screen = screen
         self.color = color
         self.name = name
+
+        # Sprite
+        pygame.sprite.Sprite.__init__(self)
+        self.ss = Spritesheet(skinPath, 5, 4, (200, 200))
+        self.playerSpeed = 4.0
+        self.image = self.ss.get_sprite(0, 0)  # Holds the actual surface object
+        self.frame = 1  # holds the frame index which is to be drawn.
+        self.threshold = 0  # holds the number of times the image will be drawn before switching frame.
+        self.lastState = 0
+        self.rect = self.image.get_rect()
 
         ### MOVE TOWARDS POSITION
         self.posX = posx #is the position of the player
@@ -393,8 +418,8 @@ class Player():
         self.moveToPosX = self.posX
         self.moveToPosY = self.posY
 
-        self.posXOnScreen = 0
-        self.posYOnScreen = 0
+        self.posXOnScreen = state.board.grid[self.posX + self.posY * 8].posX + 11
+        self.posYOnScreen = state.board.grid[self.posX + self.posY * 8].posY - 20
         self.moveToPosXOnScreen = 0
         self.moveToPosYOnScreen = 0
 
@@ -425,9 +450,14 @@ class Player():
         # Last 5 steps
         if self.moveToPosY >= 12 and (self.moveToPosX > 5 or self.moveToPosX < 2):
             self.moveToPosX = (self.moveToPosX+2) % 4 + 2
-
+            print("shoo")
+            print("shoo")
+            print("shoo")
+            print("shoo")
+            print("shoo")
         if self.moveToPosX > 7 or self.moveToPosX < 0:
             self.moveToPosX = (self.moveToPosX) % 8
+            #print("shoo")
         if self.moveToPosY < 0:
             self.moveToPosY = 0
 
@@ -435,20 +465,22 @@ class Player():
         if self.moving:
             self.steps += 1
 
-            print("Player " + str(state.playerList[state.whoseTurn].name) + " is moving")
+            #print("Player " + str(state.playerList[state.whoseTurn].name) + " is moving")
             if self.steps is 1:
-                self.moveToPosXOnScreen = state.board.grid[self.moveToPosX + self.moveToPosY * 8].posX + 8
-                self.moveToPosYOnScreen = state.board.grid[self.moveToPosX + self.moveToPosY * 8].posY + 2
-                self.moveX = (self.moveToPosXOnScreen-self.posXOnScreen)/100
-                self.moveY = (self.moveToPosYOnScreen-self.posYOnScreen)/100
+                self.moveToPosXOnScreen = state.board.grid[self.moveToPosX + self.moveToPosY * 8].posX + 11
+                self.moveToPosYOnScreen = state.board.grid[self.moveToPosX + self.moveToPosY * 8].posY - 20
+                self.moveX = (self.moveToPosXOnScreen-self.posXOnScreen)/40
+                self.moveY = (self.moveToPosYOnScreen-self.posYOnScreen)/40
+                #self.playerSpeed = self.moveY+2
+            #print(self.moveX)
             self.posXOnScreen += self.moveX
             self.posYOnScreen += self.moveY
 
-            if self.steps > 100:
+            if self.steps > 40:
                 self.moving = False
                 self.posX = self.moveToPosX
                 self.posY = self.moveToPosY
-                print("I'm no longer moving")
+                #print("I'm no longer moving")
                 self.checkOverlap(state)
 
 
@@ -466,25 +498,146 @@ class Player():
                     state.whoseTempTurn = state.playerList.index(player)  # p0, p1, p3 or p4
                     break
 
+
+    def drawMoveableSprite(self, state):
+        #
+        #print(str(state.playerList[state.whoseTurn].name))
+        self.rect = self.screen.blit(self.image, (self.posXOnScreen, self.posYOnScreen))
+        self.threshold += 1
+        if self.threshold is 8:
+            self.threshold = 0
+            if self.frame is self.ss.maxColumns - 1:
+                self.frame = 1
+            else:
+                self.frame += 1
+        if True: #insert whoseturn here
+            if pygame.key.get_pressed()[pygame.K_UP] and self.posY >= 0:
+                self.image = self.ss.get_sprite(self.frame, 2)
+                self.posYOnScreen -= self.playerSpeed
+                self.lastState = 2
+            elif pygame.key.get_pressed()[pygame.K_DOWN] and self.posY <= 18:
+                self.image = self.ss.get_sprite(self.frame, 0)
+                self.posYOnScreen += self.playerSpeed
+                self.lastState = 0
+            elif pygame.key.get_pressed()[pygame.K_LEFT] and self.posX >= 0:
+                self.image = self.ss.get_sprite(self.frame, 3)
+                self.posXOnScreen -= self.playerSpeed
+                self.lastState = 3
+            elif pygame.key.get_pressed()[pygame.K_RIGHT] and self.posX <= 8:
+                self.image = self.ss.get_sprite(self.frame, 1)
+                self.posXOnScreen += self.playerSpeed
+                self.lastState = 1
+            else:
+                self.image = self.ss.get_sprite(0, self.lastState)
+
+
+        self.posY = 1
+        self.moveToPosX = self.posX
+        self.moveToPosY = self.posY
+
+
+
     def drawMoving(self, state):
-        pygame.draw.rect(self.screen, self.color, (self.posXOnScreen,
-                                                   self.posYOnScreen,
-                                                   self.sizeX, self.sizeY))
+        #self.posYOnScreen = state.board.grid[self.posX + self.posY * 8].posY - 20
+        #self.playerSpeed = 1
+        self.rect = self.screen.blit(self.image, (self.posXOnScreen, self.posYOnScreen))
+        self.threshold += 1
+        # pygame.draw.rect(self.screen, self.color, (self.posXOnScreen,
+        #                                            self.posYOnScreen,
+        #                                            self.sizeX, self.sizeY))
+        if self.threshold is 8:
+            self.threshold = 0
+            if self.frame is self.ss.maxColumns - 1:
+                self.frame = 1
+            else:
+                self.frame += 1
+
+        if (self.moveToPosY > self.posY):  # GO UP
+            self.image = self.ss.get_sprite(self.frame, 2)
+            self.lastState = 2
+            print("WIJASJDIASD")
+        elif (self.moveToPosY < self.posY): # Move down
+            self.image = self.ss.get_sprite(self.frame, 0)
+            self.lastState = 0
+        elif (self.moveToPosX > self.posX): # RIGHT
+            self.image = self.ss.get_sprite(self.frame, 1)
+            self.lastState = 1
+        elif (self.moveToPosX < self.posX): # LEFT
+            self.image = self.ss.get_sprite(self.frame, 3)
+            self.lastState = 3
+
 
     def drawStatic(self, state):
-        self.posXOnScreen = state.board.grid[self.posX + self.posY * 8].posX + 8
-        self.posYOnScreen = state.board.grid[self.posX + self.posY * 8].posY + 2
+        if state.roundNr is 1:
+            if self.posXOnScreen < state.board.posX:
+                self.posX = 0
+            elif self.posXOnScreen > state.board.posX+state.board.sizeX:
+                self.posX = 7
 
-        pygame.draw.rect(self.screen, self.color, (self.posXOnScreen,
-                                                   self.posYOnScreen,
-                                                   self.sizeX, self.sizeY))
+        #update posX
+        self.posX = int(((self.posXOnScreen - state.board.posX) / (state.board.sizeX/8)))%8
+        self.moveToPosX = self.posX
+        self.moveToPosY = self.posY
+
+        self.posXOnScreen = state.board.grid[self.posX + self.posY * 8].posX + 11
+        self.posYOnScreen = state.board.grid[self.posX + self.posY * 8].posY - 20
+
+        self.rect = self.screen.blit(self.image, (self.posXOnScreen, self.posYOnScreen))
+
+        self.threshold = 0
+        self.image = self.ss.get_sprite(0, self.lastState)
+
 
     def draw(self, state): # State == screen
-        if (state.whoseTurn is state.playerList.index(self) or state.whoseTempTurn is state.playerList.index(self)) and self.moving:
-            self.move(state)
-            self.drawMoving(state)
+        if (state.whoseTurn is state.playerList.index(self) or (state.tempTurn and state.whoseTempTurn is state.playerList.index(self))):
+            if self.moving:
+                self.move(state)
+                self.drawMoving(state)
+            elif state.roundNr is 1:
+                self.drawMoveableSprite(state)
+            else:
+                self.posYOnScreen = state.board.grid[self.posX + self.posY * 8].posY - 20
+                self.drawStatic(state)
         else:
             self.drawStatic(state)
+
+class Spritesheet:  # a container for holding the image
+
+    def __init__(self, filePath, maxColumns, maxRows, scale=None, colorkey = (255, 255, 255)):
+        self.colorkey = colorkey
+        self.stripes = []  # holds the tuples which contain four vectors to form a rectangle
+        self.spritesheet = pygame.image.load(filePath).convert()
+        self.maxColumns = maxColumns
+        self.maxRows = maxRows
+        if scale is not None:
+            self.scale(scale)
+        else:
+            self.sheetSize = self.spritesheet.get_size()
+            self.spriteWidth = int(self.sheetSize[0]/maxColumns)
+            self.spriteHeight = int(self.sheetSize[1]/maxRows)
+        self.init_sprites()
+
+    def scale(self, scale):
+        self.spritesheet = pygame.transform.scale(self.spritesheet, scale)
+        self.sheetSize = self.spritesheet.get_size()
+        self.spriteWidth = int(self.sheetSize[0]/self.maxColumns)
+        self.spriteHeight = int(self.sheetSize[1]/self.maxRows)
+
+    def init_sprites(self):
+        posx = [x for x in range(0, self.sheetSize[0], self.spriteWidth)]
+        posy = [y for y in range(0, self.sheetSize[1], self.spriteHeight)]
+        self.stripes = []
+        for i in range(0, self.maxRows):
+            self.stripes.append([])
+            for j in range(0, self.maxColumns):
+                self.stripes[i].append((posx[j], posy[i], self.spriteWidth, self.spriteHeight))
+
+    def get_sprite(self, column, row):
+        rect = pygame.Rect(self.stripes[row][column])
+        cropped = pygame.Surface((self.spriteWidth, self.spriteHeight))
+        cropped.blit(self.spritesheet, (0, 0), rect)
+        cropped.set_colorkey(self.colorkey)
+        return cropped
 
 class box:
     def __init__(self, screen, boxPosX, boxPosY, boxSizeX, boxSizeY, x, y):
@@ -648,8 +801,8 @@ class playScreen:
     def addLabel(self, text, posx, posy, size = 50, color = (200, 200, 200)):
         self.labelList.append(Label(self.screen, text, posx, posy, size, color))
 
-    def addPlayer(self, color, name, posx, posy):
-        self.playerList.append(Player(self.screen, color, name, posx, posy))
+    def addPlayer(self, color, name, posx, posy, skinpath, state):
+        self.playerList.append(Player(self.screen, color, name, posx, posy, skinpath, state))
 
     def addDice(self, name, posx, posy, width = 100, height = 100):
         self.dice = MenuButton(self.screen, name, posx, posy, width, height)
