@@ -3,6 +3,7 @@ import sys
 from random import *
 import math
 import configparser
+import database as db
 
 class Game:
 
@@ -47,7 +48,7 @@ class Game:
 
             if self.completed:
                 self.activeMainScreen = -1
-                print("OVER!!!!!!!!!!!!!!!!!!!")
+                #print("OVER!!!!!!!!!!!!!!!!!!!")
 
             for event in pygame.event.get():
                 if event.type is pygame.VIDEORESIZE:
@@ -78,10 +79,18 @@ class Game:
                         self.directionFunction(self.state)
                     self.state = self.screenList[self.activeMainScreen][self.activeSubScreen]
                 if event.type is pygame.KEYUP:
-                    if event.key == pygame.K_0:
+                    if event.key == pygame.K_0 and self.state.roundNr is 1:
                         self.state.whoseTurn = (self.state.whoseTurn + 1) % self.state.nrPlayers
                         if self.state.whoseTurn is 0:
                             self.state.roundNr += 1
+            if isinstance(self.state, playScreen):
+                for player in self.state.playerList:
+                    if player.imdone:
+                        player.imdone = False
+                        self.state.whoseTurn = (self.state.whoseTurn + 1) % self.state.nrPlayers
+                        if self.state.whoseTurn is 0:
+                            self.state.roundNr += 1
+
 
 
 
@@ -335,48 +344,55 @@ class Game:
         if state.dice and state.roundNr > 1:
 
             self.diceNumber = randint(1, 6)
+            self.moveNumber = math.ceil(self.diceNumber/2)
             state.dice.buttonText = str(self.diceNumber)
-            if (state.tempTurn):
-                self.whoseTempTurn.moving = True
-                self.whoseTempTurn.steps = 0
-                #print(1)
-                self.whoseTempTurn.moveToPosY -= (1 * self.diceNumber)
-                if self.whoseTempTurn.moveToPosY <= 0:
-                    self.whoseTempTurn.moveToPosY = 0
+
+            x = QuestionScreen(self.screen, self.p, self.whoseTurn).run()
+            if x:
+                if (state.tempTurn):
+                    self.whoseTempTurn.moving = True
+                    self.whoseTempTurn.steps = 0
+                    #print(1)
+                    self.whoseTempTurn.moveToPosY -= (1 * self.moveNumber)
+                    if self.whoseTempTurn.moveToPosY <= 0:
+                        self.whoseTempTurn.moveToPosY = 0
+                else:
+                    self.whoseTurn.moving = True
+                    self.whoseTurn.steps = 0
+                    if self.direction is 0:
+                        # TEST IF YOU REACH NEW AREA::
+                        if (self.whoseTurn.posY <= 11) and (self.whoseTurn.posY + self.moveNumber > 11):
+                            if self.whoseTurn.posX is 0 or self.whoseTurn.posX is 1:
+                                self.whoseTurn.moveToPosX = 2
+                                print("P1")
+                            elif self.whoseTurn.posX is 6 or self.whoseTurn.posX is 7:
+                                self.whoseTurn.moveToPosX = 5
+                                print("P4")
+                            elif self.whoseTurn.posX is 2 or self.whoseTurn.posX is 3:
+                                self.whoseTurn.moveToPosX = 3
+                                print("P2")
+                            elif self.whoseTurn.posX is 4 or self.whoseTurn.posX is 5:
+                                self.whoseTurn.moveToPosX = 4
+                                print("P3")
+                            #self.screenList[3][0].playerList[state.whoseTurn].posX = int((self.screenList[3][0].playerList[state.whoseTurn].posX % 4) + 1)
+                        self.whoseTurn.moveToPosY += (1 * self.moveNumber)
+                    if self.direction is 1:
+                        self.whoseTurn.moveToPosX += (1 * self.moveNumber)
+                    if self.direction is 2:
+                        self.whoseTurn.moveToPosY -= (1 * self.moveNumber)
+                    if self.direction is 3:
+                        self.whoseTurn.moveToPosX -= (1 * self.moveNumber)
+
+                self.whoseTurn.moveAlongBoard(state)
+
+                if self.whoseTurn.moveToPosY >= 17:
+                    print("Player "+str(self.whoseTurn.name)+" won the game!")
+                    self.completed = True
+                    self.screenList[4][0].labelList[0].text = "Player "+str(self.whoseTurn.name)+" won the game!"
+                    ## self.activemainscreen += 1
             else:
-                self.whoseTurn.moving = True
-                self.whoseTurn.steps = 0
-                if self.direction is 0:
-                    # TEST IF YOU REACH NEW AREA::
-                    if (self.whoseTurn.posY <= 11) and (self.whoseTurn.posY + self.diceNumber > 11):
-                        if self.whoseTurn.posX is 0 or self.whoseTurn.posX is 1:
-                            self.whoseTurn.moveToPosX = 2
-                            print("P1")
-                        elif self.whoseTurn.posX is 6 or self.whoseTurn.posX is 7:
-                            self.whoseTurn.moveToPosX = 5
-                            print("P4")
-                        elif self.whoseTurn.posX is 2 or self.whoseTurn.posX is 3:
-                            self.whoseTurn.moveToPosX = 3
-                            print("P2")
-                        elif self.whoseTurn.posX is 4 or self.whoseTurn.posX is 5:
-                            self.whoseTurn.moveToPosX = 4
-                            print("P3")
-                        #self.screenList[3][0].playerList[state.whoseTurn].posX = int((self.screenList[3][0].playerList[state.whoseTurn].posX % 4) + 1)
-                    self.whoseTurn.moveToPosY += (1 * self.diceNumber)
-                if self.direction is 1:
-                    self.whoseTurn.moveToPosX += (1 * self.diceNumber)
-                if self.direction is 2:
-                    self.whoseTurn.moveToPosY -= (1 * self.diceNumber)
-                if self.direction is 3:
-                    self.whoseTurn.moveToPosX -= (1 * self.diceNumber)
+                self.whoseTurn.imdone = True
 
-            self.whoseTurn.moveAlongBoard(state)
-
-            if self.whoseTurn.moveToPosY >= 17:
-                print("Player "+str(self.whoseTurn.name)+" won the game!")
-                self.completed = True
-                self.screenList[4][0].labelList[0].text = "Player "+str(self.whoseTurn.name)+" won the game!"
-                ## self.activemainscreen += 1
 
     def directionFunction(self, state):
         if state.direction:
@@ -432,6 +448,8 @@ class Player(pygame.sprite.Sprite):
         self.color = color
         self.name = name
 
+        self.imdone = False
+
         # Sprite
         pygame.sprite.Sprite.__init__(self)
         self.ss = Spritesheet(skinPath, 5, 4, (200, 200))
@@ -463,31 +481,16 @@ class Player(pygame.sprite.Sprite):
         self.sizeY = 35
 
     def moveAlongBoard(self, state):
-        print("Moving along board..........")
+        #print("Moving along board..........")
         # Finish Line
         if self.moveToPosY >= 17:
             self.moveToPosY = 17
-            print(self.name + " WON!")
-            print(self.name + " WON!")
-            print(self.name + " WON!")
-            print(self.name + " WON!")
-            print(self.name + " WON!")
-            print(self.name + " WON!")
-            print(self.name + " WON!")
-            print(self.name + " WON!")
-            print(self.name + " WON!")
-            print(self.name + " WON!")
             print(self.name + " WON!")
 
 
         # Last 5 steps
         if self.moveToPosY >= 12 and (self.moveToPosX > 5 or self.moveToPosX < 2):
             self.moveToPosX = (self.moveToPosX+2) % 4 + 2
-            print("shoo")
-            print("shoo")
-            print("shoo")
-            print("shoo")
-            print("shoo")
         if self.moveToPosX > 7 or self.moveToPosX < 0:
             self.moveToPosX = (self.moveToPosX) % 8
             #print("shoo")
@@ -515,6 +518,10 @@ class Player(pygame.sprite.Sprite):
                 self.posY = self.moveToPosY
                 #print("I'm no longer moving")
                 self.checkOverlap(state)
+
+                self.imdone = True
+
+
 
 
     def checkOverlap(self, state):
@@ -624,8 +631,16 @@ class Player(pygame.sprite.Sprite):
     def draw(self, state): # State == screen
 
         self.category = state.board.grid[self.posX + self.posY * 8].category
-        if state.playerList[state.whoseTurn].name is self.name:
-            print("Player " + str(state.playerList[state.whoseTurn].name) + " category = "+str(self.category))
+        if self.category is 1:
+            self.category = "Sport"
+        elif self.category is 2:
+            self.category = "Historie" #taal faal
+        elif self.category is 3:
+            self.category = "Entertainment"
+        elif self.category is 4:
+            self.category = "Geografie"
+        # if state.playerList[state.whoseTurn].name is self.name:
+        #     print("Player " + str(state.playerList[state.whoseTurn].name) + " category = "+str(self.category))
 
         if (state.whoseTurn is state.playerList.index(self) or (state.tempTurn and state.whoseTempTurn is state.playerList.index(self))):
             if self.moving:
@@ -824,6 +839,10 @@ class playScreen:
         self.dice.draw()
         self.direction.draw()
         self.round("Round "+str(self.roundNr), (0,0,0))
+        if self.roundNr is 1:
+            self.explain("Move your character to","the desired category","If you're ready press 0", (0,0,0))
+        elif self.roundNr is 2:
+            self.explain("Throw the dice!", "","", (0, 0, 0))
         if tempTurn:
             self.players_turn("Player " + str(self.playerList[whoseTempTurn].name) + " has to move backwards! Roll the dice", (0, 0, 0))
         else:
@@ -856,6 +875,15 @@ class playScreen:
     def round(self, msg, color):
         screen_text = self.font.render(msg, True, color)
         self.screen.blit(screen_text, (10, 545))
+        pygame.display.update()
+
+    def explain(self, msg, msg2,msg3, color):
+        screen_text = self.font.render(msg, True, color)
+        self.screen.blit(screen_text, (10, 605))
+        screen_text2 = self.font.render(msg2, True, color)
+        self.screen.blit(screen_text2, (10, 635))
+        screen_text3 = self.font.render(msg3, True, color)
+        self.screen.blit(screen_text3, (10, 665))
         pygame.display.update()
 
 class Menu:
@@ -1020,5 +1048,87 @@ class MenuCheckbox:
             return True
         else:
             return False
+
+class QuestionScreen:
+    def __init__(self,screen, p, playerObj):
+        self.screen = screen
+        self.timer = Timer(self.screen, 25, 25)
+        self.player = playerObj
+        self.width = p.get("width", "int")
+        self.height = p.get("height", "int")
+        self.gameReturn = False
+        self.isComplete = False
+        self.category = self.player.category
+        self.rand_question_pack = db.download_per_category(self.player.category)[Random().randint(0, 14)]
+        self.question = [self.rand_question_pack[2][i:i+40] for i in range(0, len(self.rand_question_pack[2]), 40)]
+        self.m = Menu(p)
+        self.m.addLabel("Question: ", int(self.width / 8), 25, size=30)
+        i = 25
+        for part in self.question:
+            self.m.addLabel(part, int(self.width/4), i, size=30)
+            i += 30
+        self.m.addButton("A", int(self.width / 8), 200, width=275, height=75)  # Add buttons to the screen
+        self.m.addLabel("Answer A: "+db.download_singlequestionoptionA(int(self.rand_question_pack[0]))[0][0], int(self.width / 2.75), 200, size=20)
+        self.m.addButton("B", int(self.width / 8), 350, width=275, height=75)
+        self.m.addLabel("Answer B: "+db.download_singlequestionoptionB(int(self.rand_question_pack[0]))[0][0], int(self.width / 2.75), 350, size=20)
+        if self.rand_question_pack[5] is not "":
+            self.m.addButton("C", int(self.width / 8), 500, width=275, height=75)
+            self.m.addLabel("Answer C: "+db.download_singlequestionoptionC(int(self.rand_question_pack[0]))[0][0], int(self.width / 2.75), 500, size=20)
+
+    def run(self):
+        while not self.gameReturn:
+            self.draw()
+            pygame.display.flip()
+
+            if self.timer.get_time() is 50:
+                self.gameReturn = True
+
+            for event in pygame.event.get():
+                if event.type is pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+                elif event.type is pygame.MOUSEBUTTONUP:
+                    if self.m.buttonList[0]:
+                        if db.download_question_answer(self.rand_question_pack[0])[0][0] is "A":
+                            self.isComplete = True
+                        self.gameReturn = True
+                    elif self.m.buttonList[1]:
+                        if db.download_question_answer(self.rand_question_pack[0])[0][0] is "B":
+                            self.isComplete = True
+                        self.gameReturn = True
+                    elif len(self.m.buttonList) is 3:
+                        if self.m.buttonList[2]:
+                            if db.download_question_answer(self.rand_question_pack[0])[0][0] is "C":
+                                self.isComplete = True
+                            self.gameReturn = True
+
+        if self.isComplete:  # return statements can be replaced with "move" function in player class to move position of player instead of returning a boolean.
+            return True
+        else:
+            return False
+
+
+    def draw(self):
+        self.m.draw()
+        self.timer.get_label().draw()
+
+
+class Timer:
+    def __init__(self, screen, posx = 0, posy = 0):
+        self.posx = posx
+        self.posy = posy
+        self.time = pygame.time.get_ticks()
+        self.screen = screen
+        pass
+
+    def get_time(self):
+        return int((pygame.time.get_ticks() - self.time)/1000)
+
+    def get_label(self):
+        return Label(self.screen, str(int(self.get_time())), self.posx, self.posy)
+
+    def reset(self):
+        self.time = pygame.time.get_ticks()
+
 if __name__ == '__main__':
     Game().run()
