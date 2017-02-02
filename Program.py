@@ -301,7 +301,7 @@ class Game:
         self.whoseTurn = state.playerList[state.whoseTurn]
         self.whoseTempTurn = state.playerList[state.whoseTempTurn]
 
-        if state.dice:
+        if state.dice and state.roundNr > 1:
 
             self.diceNumber = randint(1, 6)
             state.dice.buttonText = str(self.diceNumber)
